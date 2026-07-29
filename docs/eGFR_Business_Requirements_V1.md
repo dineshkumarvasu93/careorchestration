@@ -301,7 +301,7 @@ Explicitly excluded from this project. If asked, these are production concerns d
 
 ## 13. Sign-off
 
-Section 4.2 dependencies require agreement from the AI, RAG and FHIR teams before development begins. The business requirements in section 8 are owned by our team and may be refined as long as the success metrics in section 9 still hold.
+Section 10 (Assumptions, dependencies & constraints) requires agreement from the AI, RAG and FHIR teams before development begins. The business requirements in section 8 are owned by our team and may be refined as long as the success metrics in section 9 still hold.
 
 | Role | Name | Date | Approved |
 |---|---|---|---|
