@@ -19,7 +19,7 @@ It is the canonical location for linking Figma frames and exported design images
 ## 2. Design Asset Policy
 
 - All design assets are prototype-safe and synthetic-data only.
-- Every UI-impacting epic has a dedicated design folder under .propel/context/Design.
+- Every UI-impacting epic should have a dedicated design folder under .propel/context/Design (create as assets are added).
 - Figma links and image exports should be attached before implementation starts.
 - Conversation UX references include intent-level copy and decision prompts to keep parity with screen flow.
 
