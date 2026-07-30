@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCR-014 — Same-Day Queue View | PropelIQ Health</title>
+<link rel="stylesheet" href="wireframe-shared.css">
+<style>
+  .queue-table { width: 100%; border-collapse: collapse; }
+  .queue-table th { background: var(--neutral-50); font-size: var(--text-body-sm); font-weight: 600; color: var(--neutral-500); text-transform: uppercase; letter-spacing: 0.05em; padding: var(--space-3) var(--space-4); border-bottom: 2px solid var(--neutral-200); text-align: left; white-space: nowrap; }
+  .queue-table td { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--neutral-200); vertical-align: middle; }
+  .queue-table tr:hover td { background: var(--neutral-50); }
+  .queue-table tr:last-child td { border-bottom: none; }
+  .position-num { font-family: var(--font-mono); font-weight: 700; color: var(--neutral-400); font-size: var(--text-body-sm); }
+  .drag-hint { font-size: var(--text-caption); color: var(--neutral-400); cursor: move; }
+  .filter-strip { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; margin-bottom: var(--space-4); }
+  .filter-chip { padding: 4px 14px; border-radius: var(--radius-full); font-size: var(--text-body-sm); font-weight: 500; cursor: pointer; border: 1.5px solid var(--neutral-200); background: white; transition: all var(--transition-micro); }
+  .filter-chip.active-filter { border-color: var(--color-teal-500); background: var(--color-teal-100); color: var(--color-teal-500); font-weight: 600; }
+  .confirm-dialog-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 50; }
+  .confirm-dialog { background: white; border-radius: var(--radius-xl); padding: var(--space-8); max-width: 400px; width: 100%; box-shadow: var(--shadow-4); }
+</style>
+</head>
+<body>
+
+<!-- Navigation Map
+| Element          | Action | Target Screen               |
+|------------------|--------|-----------------------------|
+| #link-patient-*  | click  | SCR-016 (360° Patient View) |
+| #btn-arrived     | click  | Shows "Mark arrived" dialog |
+-->
+
+<div class="app-shell">
+  <header class="topbar" role="banner">
+    <div class="topbar-logo"><div class="logo-icon">P</div>PropelIQ Health</div>
+    <div class="topbar-spacer"></div>
+    <span class="topbar-role-badge" style="background:var(--color-success-bg);color:var(--color-success);">Staff</span>
+    <div class="topbar-avatar" tabindex="0">RP</div>
+    <button class="topbar-logout">Sign out</button>
+  </header>
+
+  <div class="app-main">
+    <nav class="sidebar" aria-label="Staff navigation">
+      <div class="sidebar-section-label">Staff Portal</div>
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-011-staff-dashboard.html"><span class="nav-icon">⊞</span> Dashboard</a></li>
+        <li class="sidebar-nav-item active"><a href="#" aria-current="page"><span class="nav-icon">📋</span> Queue</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-013-patient-search.html"><span class="nav-icon">🔍</span> Patients</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-016-patient-360.html"><span class="nav-icon">👤</span> Patient View</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-018-coding-panel.html"><span class="nav-icon">🏥</span> Medical Coding</a></li>
+      </ul>
+    </nav>
+
+    <main class="page-content" id="main-content">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Same-day queue</h1>
+          <p class="page-subtitle">Thursday 17 April 2026 — 14 patients scheduled · 6 arrived</p>
+        </div>
+        <div class="flex gap-2">
+          <a href="wireframe-SCR-013-patient-search.html" class="btn btn-secondary btn-md">+ Add walk-in</a>
+          <button class="btn btn-ghost btn-md" type="button" aria-label="Refresh queue" aria-live="polite">↻ Refresh</button>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-strip" role="group" aria-label="Filter queue by status">
+        <span style="font-size:var(--text-body-sm);color:var(--neutral-500);">Show:</span>
+        <button class="filter-chip active-filter" type="button" aria-pressed="true">All (14)</button>
+        <button class="filter-chip" type="button" aria-pressed="false">Arrived (6)</button>
+        <button class="filter-chip" type="button" aria-pressed="false">Scheduled (5)</button>
+        <button class="filter-chip" type="button" aria-pressed="false">In progress (2)</button>
+        <button class="filter-chip" type="button" aria-pressed="false">Walk-ins (1)</button>
+        <button class="filter-chip" type="button" aria-pressed="false">High risk (3)</button>
+      </div>
+
+      <!-- Queue table -->
+      <div class="table-wrapper" role="region" aria-label="Same-day appointment queue" tabindex="0">
+        <table class="queue-table" aria-live="polite">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Patient</th>
+              <th scope="col">Time</th>
+              <th scope="col">Provider</th>
+              <th scope="col">Type</th>
+              <th scope="col">Status</th>
+              <th scope="col">No-show risk</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="position-num drag-hint" title="Drag to reorder" aria-label="Position 1, drag to reorder">⠿ 1</span></td>
+              <td><a href="wireframe-SCR-016-patient-360.html" class="link" id="link-patient-1" aria-label="View Jane Smith">Jane Smith</a><div style="font-size:var(--text-caption);color:var(--neutral-400);">MRN-20244-A</div></td>
+              <td style="font-family:var(--font-mono);">09:00</td>
+              <td>Dr. R. Patel</td>
+              <td>Consultation</td>
+              <td><span class="badge badge-success">Arrived</span></td>
+              <td><span class="badge risk-low" aria-label="Low no-show risk">↓ Low</span></td>
+              <td><button class="btn btn-ghost btn-sm" type="button">View</button></td>
+            </tr>
+            <tr>
+              <td><span class="position-num drag-hint" aria-label="Position 2, drag to reorder">⠿ 2</span></td>
+              <td><a href="wireframe-SCR-016-patient-360.html" class="link" aria-label="View Michael Chen">Michael Chen</a><div style="font-size:var(--text-caption);color:var(--neutral-400);">MRN-10381-B</div></td>
+              <td style="font-family:var(--font-mono);">09:30</td>
+              <td>Dr. M. Chen</td>
+              <td>Follow-up</td>
+              <td><span class="badge badge-info">Scheduled</span></td>
+              <td><span class="badge risk-medium" aria-label="Medium no-show risk">— Medium</span></td>
+              <td><button class="btn btn-primary btn-sm" type="button" id="btn-arrived" aria-label="Mark Michael Chen as arrived">Arrived</button></td>
+            </tr>
+            <tr>
+              <td><span class="position-num drag-hint" aria-label="Position 3, drag to reorder">⠿ 3</span></td>
+              <td><a href="wireframe-SCR-016-patient-360.html" class="link" aria-label="View Priya Sharma">Priya Sharma</a><div style="font-size:var(--text-caption);color:var(--neutral-400);">MRN-30598-C</div></td>
+              <td style="font-family:var(--font-mono);">10:00</td>
+              <td>Nurse T. Okafor</td>
+              <td>Vaccination</td>
+              <td><span class="badge badge-info">Scheduled</span></td>
+              <td><span class="badge risk-high" aria-label="High no-show risk">↑ High</span></td>
+              <td>
+                <button class="btn btn-primary btn-sm" type="button" aria-label="Mark Priya Sharma as arrived">Arrived</button>
+                <button class="btn btn-ghost btn-sm" type="button" aria-label="Call Priya Sharma" style="margin-left:4px;">📞</button>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="position-num drag-hint" aria-label="Position 4, drag to reorder">⠿ 4</span></td>
+              <td><a href="wireframe-SCR-016-patient-360.html" class="link" aria-label="View David Okonkwo">David Okonkwo</a><div style="font-size:var(--text-caption);color:var(--neutral-400);">MRN-40127-D</div></td>
+              <td style="font-family:var(--font-mono);">10:30</td>
+              <td>Dr. R. Patel</td>
+              <td>Walk-in</td>
+              <td><span class="badge" style="background:var(--color-warning-bg);color:var(--color-warning);">In progress</span></td>
+              <td><span class="badge risk-low" aria-label="Low no-show risk">↓ Low</span></td>
+              <td><button class="btn btn-ghost btn-sm" type="button">View</button></td>
+            </tr>
+            <tr>
+              <td><span class="position-num drag-hint" aria-label="Position 5, drag to reorder">⠿ 5</span></td>
+              <td><a href="wireframe-SCR-016-patient-360.html" class="link" aria-label="View Sofia Martinez">Sofia Martinez</a><div style="font-size:var(--text-caption);color:var(--neutral-400);">MRN-50293-E</div></td>
+              <td style="font-family:var(--font-mono);">11:00</td>
+              <td>Dr. M. Chen</td>
+              <td>Consultation</td>
+              <td><span class="badge badge-info">Scheduled</span></td>
+              <td><span class="badge risk-high" aria-label="High no-show risk">↑ High</span></td>
+              <td>
+                <button class="btn btn-primary btn-sm" type="button" aria-label="Mark Sofia Martinez as arrived">Arrived</button>
+                <button class="btn btn-ghost btn-sm" type="button" aria-label="Call Sofia Martinez" style="margin-left:4px;">📞</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p style="margin-top:var(--space-3); font-size:var(--text-body-sm); color:var(--neutral-400);">
+        ⠿ Drag rows to reorder the queue. Reordering is logged in the audit trail.
+      </p>
+    </main>
+  </div>
+</div>
+
+<!-- Mark Arrived Confirmation Dialog -->
+<div class="confirm-dialog-backdrop" role="dialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-desc">
+  <div class="confirm-dialog">
+    <h2 id="confirm-title" style="font-size:var(--text-h4); margin-bottom:var(--space-2);">Mark as arrived?</h2>
+    <p id="confirm-desc" style="font-size:var(--text-body-md); color:var(--neutral-600); margin-bottom:var(--space-6);">
+      Confirm that <strong>Michael Chen</strong> has checked in at the reception desk.
+    </p>
+    <div class="flex gap-3 justify-end">
+      <button class="btn btn-secondary btn-md" type="button" aria-label="Cancel">Cancel</button>
+      <button class="btn btn-primary btn-md" type="button" aria-label="Confirm arrival">Confirm arrival</button>
+    </div>
+  </div>
+</div>
+
+<div class="wireframe-annotation">
+  <span class="scr-id">SCR-014</span>
+  <span>Same-Day Queue View</span>
+  <span class="priority-badge">P0</span>
+  <span class="uxr-tags">UXR: 102, 201, 203, 402, 501, 502, 602, 603, 604</span>
+</div>
+
+</body>
+</html>

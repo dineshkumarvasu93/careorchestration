@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCR-009 — Booking & Insurance Form | PropelIQ Health</title>
+<link rel="stylesheet" href="wireframe-shared.css">
+<style>
+  .summary-sidebar { width: 300px; flex-shrink: 0; }
+  .slot-summary { background: var(--color-navy-600); color: white; border-radius: var(--radius-lg); padding: var(--space-6); margin-bottom: var(--space-4); }
+  .slot-summary .label { font-size: var(--text-body-sm); opacity: 0.7; margin-bottom: var(--space-1); }
+  .slot-summary .value { font-size: var(--text-h4); font-weight: 700; }
+  .insurance-check-result { margin-top: var(--space-3); padding: var(--space-3); border-radius: var(--radius-md); font-size: var(--text-body-sm); display: flex; align-items: center; gap: var(--space-2); }
+  .check-matched { background: var(--color-success-bg); color: var(--color-success); border: 1px solid #BBF7D0; }
+  .check-unmatched { background: var(--color-warning-bg); color: var(--color-warning); border: 1px solid #FDE68A; }
+  .preferred-slot-section { border: 2px dashed var(--neutral-200); border-radius: var(--radius-lg); padding: var(--space-6); margin-top: var(--space-6); }
+  .preferred-slot-section h3 { margin-bottom: var(--space-2); }
+  .preferred-desc { font-size: var(--text-body-md); color: var(--neutral-500); margin-bottom: var(--space-4); }
+</style>
+</head>
+<body>
+
+<!-- Navigation Map
+| Element          | Action | Target Screen                    |
+|------------------|--------|----------------------------------|
+| #btn-confirm     | click  | SCR-010 (Appointment Confirmation)|
+| #btn-back        | click  | SCR-008 (Booking Calendar)       |
+-->
+
+<div class="app-shell">
+  <header class="topbar" role="banner">
+    <div class="topbar-logo"><div class="logo-icon">P</div>PropelIQ Health</div>
+    <div class="topbar-spacer"></div>
+    <span class="topbar-role-badge">Patient</span>
+    <div class="topbar-avatar" tabindex="0">JS</div>
+    <button class="topbar-logout">Sign out</button>
+  </header>
+
+  <div class="app-main">
+    <nav class="sidebar" aria-label="Patient navigation">
+      <div class="sidebar-section-label">Patient Portal</div>
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-004-patient-dashboard.html"><span class="nav-icon">⊞</span> Dashboard</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-005-intake-method.html"><span class="nav-icon">📋</span> My Intake</a></li>
+        <li class="sidebar-nav-item active"><a href="#" aria-current="page"><span class="nav-icon">📅</span> Book Appointment</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-015-documents-upload.html"><span class="nav-icon">📄</span> My Documents</a></li>
+      </ul>
+    </nav>
+
+    <main class="page-content" id="main-content">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="wireframe-SCR-004-patient-dashboard.html">Dashboard</a>
+        <span class="sep">›</span>
+        <a href="wireframe-SCR-008-booking-calendar.html" id="btn-back">Choose slot</a>
+        <span class="sep">›</span>
+        <span class="current" aria-current="page">Insurance & confirm</span>
+      </nav>
+
+      <div class="page-header" style="margin-bottom: var(--space-6);">
+        <div>
+          <h1 class="page-title">Confirm your booking</h1>
+          <p class="page-subtitle">Provide your insurance details and confirm your appointment.</p>
+        </div>
+      </div>
+
+      <div class="flex gap-6 items-start">
+        <!-- Form -->
+        <div style="flex:1; min-width:0;">
+          <div class="card">
+            <h2 style="font-size:var(--text-h4); margin-bottom:var(--space-6);">Insurance information</h2>
+            <form novalidate>
+              <div class="form-group">
+                <label for="insurance-provider">Insurance provider <span class="required">*</span></label>
+                <input type="text" id="insurance-provider" name="insuranceProvider"
+                       value="BlueCross Shield" aria-required="true"
+                       aria-describedby="insurance-check">
+              </div>
+
+              <div class="form-group">
+                <label for="insurance-id">Member ID / Policy number <span class="required">*</span></label>
+                <input type="text" id="insurance-id" name="memberId"
+                       value="BC-2024-88472-J" aria-required="true">
+              </div>
+
+              <!-- Insurance pre-check result -->
+              <div class="insurance-check-result check-matched" id="insurance-check" role="status" aria-live="polite" aria-label="Insurance pre-check result: Matched">
+                <span>✓</span>
+                <span>Insurance matched — BlueCross Shield accepted. Pre-check does not guarantee coverage.</span>
+              </div>
+
+              <div class="preferred-slot-section" role="group" aria-labelledby="preferred-slot-heading">
+                <h3 id="preferred-slot-heading">Set a preferred slot (optional)</h3>
+                <p class="preferred-desc">
+                  If a better slot becomes available before your appointment, we can automatically swap you in. Select any unavailable (★) slot from the calendar as your preference.
+                </p>
+                <div class="form-group">
+                  <label for="preferred-slot">Preferred slot</label>
+                  <select id="preferred-slot" name="preferredSlot">
+                    <option value="">No preference</option>
+                    <option>Tue 21 Apr — 09:30 AM (Dr. R. Patel)</option>
+                    <option>Tue 21 Apr — 10:30 AM (Dr. M. Chen)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="alert alert-info" style="margin-top:var(--space-6);">
+                <span>ℹ</span>
+                <span>Your insurance information is stored securely and encrypted. It is not shared with third parties.</span>
+              </div>
+            </form>
+          </div>
+
+          <div class="flex justify-between items-center mt-6">
+            <a href="wireframe-SCR-008-booking-calendar.html" class="btn btn-secondary btn-md">← Change slot</a>
+            <a href="wireframe-SCR-010-confirmation.html" class="btn btn-primary btn-lg" id="btn-confirm">
+              Confirm appointment →
+            </a>
+          </div>
+        </div>
+
+        <!-- Booking summary sidebar -->
+        <div class="summary-sidebar">
+          <div class="slot-summary" aria-label="Appointment summary">
+            <div class="label">Appointment date</div>
+            <div class="value">Wed 22 April 2026</div>
+            <div class="value" style="font-size:var(--text-h3); color:var(--color-teal-400);">10:00 AM</div>
+            <div class="label" style="margin-top:var(--space-3);">Provider</div>
+            <div class="value" style="font-size:var(--text-body-md);">Dr. R. Patel</div>
+            <div class="label" style="margin-top:var(--space-2);">Type</div>
+            <div class="value" style="font-size:var(--text-body-md);">General Consultation</div>
+            <div class="label" style="margin-top:var(--space-2);">Duration</div>
+            <div class="value" style="font-size:var(--text-body-md);">30 minutes</div>
+          </div>
+          <div class="card" style="font-size:var(--text-body-sm); color:var(--neutral-500);">
+            <p>After booking you will receive:</p>
+            <ul style="margin-top:var(--space-2); padding-left: var(--space-4); line-height:1.8;">
+              <li>PDF confirmation by email</li>
+              <li>SMS reminder (24 hrs before)</li>
+              <li>Calendar invite option</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="wireframe-annotation">
+  <span class="scr-id">SCR-009</span>
+  <span>Booking & Insurance Form</span>
+  <span class="priority-badge">P0</span>
+  <span class="uxr-tags">UXR: 201, 202, 204, 301, 303, 402, 501, 601, 602</span>
+</div>
+
+</body>
+</html>

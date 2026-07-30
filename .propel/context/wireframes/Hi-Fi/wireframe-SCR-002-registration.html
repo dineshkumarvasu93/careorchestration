@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCR-002 — Registration | PropelIQ Health</title>
+<link rel="stylesheet" href="wireframe-shared.css">
+<style>
+  body { background: var(--neutral-50); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: var(--space-8) var(--space-4); }
+  .auth-container { width: 100%; max-width: 480px; }
+  .auth-logo { text-align: center; margin-bottom: var(--space-8); }
+  .auth-logo .logo-mark { width: 56px; height: 56px; background: var(--color-teal-500); border-radius: var(--radius-lg); display: inline-flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 22px; margin-bottom: var(--space-3); }
+  .auth-logo h1 { font-size: var(--text-h3); color: var(--color-navy-600); margin: 0; }
+  .auth-card { background: white; border: 1px solid var(--neutral-200); border-radius: var(--radius-xl); padding: var(--space-8); box-shadow: var(--shadow-2); }
+  .auth-card h2 { font-size: var(--text-h3); margin-bottom: var(--space-1); }
+  .auth-card .sub { font-size: var(--text-body-md); color: var(--neutral-500); margin-bottom: var(--space-6); }
+  .pw-strength { display: flex; gap: var(--space-1); margin-top: var(--space-2); }
+  .pw-bar { height: 4px; flex: 1; border-radius: var(--radius-full); background: var(--neutral-200); }
+  .pw-bar.active { background: var(--color-teal-500); }
+  .pw-label { font-size: var(--text-caption); color: var(--neutral-400); }
+  .checkbox-group { display: flex; align-items: flex-start; gap: var(--space-3); margin-top: var(--space-4); }
+  .checkbox-group input[type="checkbox"] { width: 18px; height: 18px; min-height: 18px; margin-top: 2px; flex-shrink: 0; }
+  .checkbox-group label { font-size: var(--text-body-md); font-weight: 400; color: var(--neutral-600); }
+  .form-actions { margin-top: var(--space-6); display: flex; flex-direction: column; gap: var(--space-3); }
+  .login-prompt { text-align: center; font-size: var(--text-body-sm); color: var(--neutral-500); margin-top: var(--space-4); }
+</style>
+</head>
+<body>
+
+<!-- Navigation Map
+| Element           | Action | Target Screen              |
+|-------------------|--------|----------------------------|
+| #btn-register     | click  | SCR-003 (Email Verification)|
+| #link-login       | click  | SCR-001 (Login)            |
+-->
+
+<div class="auth-container">
+  <div class="auth-logo">
+    <div class="logo-mark">P</div>
+    <h1>PropelIQ Health</h1>
+  </div>
+
+  <div class="auth-card">
+    <h2>Create your account</h2>
+    <p class="sub">Register as a patient to book appointments and manage your health records.</p>
+
+    <form novalidate>
+      <div class="grid-2" style="gap: var(--space-4);">
+        <div class="form-group">
+          <label for="fname">First name <span class="required" aria-hidden="true">*</span></label>
+          <input type="text" id="fname" name="fname" placeholder="Jane" autocomplete="given-name" aria-required="true">
+        </div>
+        <div class="form-group">
+          <label for="lname">Last name <span class="required" aria-hidden="true">*</span></label>
+          <input type="text" id="lname" name="lname" placeholder="Smith" autocomplete="family-name" aria-required="true">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top: var(--space-6);">
+        <label for="reg-email">Email address <span class="required" aria-hidden="true">*</span></label>
+        <input type="email" id="reg-email" name="email" placeholder="e.g. jane.smith@email.com"
+               autocomplete="email" aria-required="true">
+      </div>
+
+      <div class="form-group">
+        <label for="reg-password">Password <span class="required" aria-hidden="true">*</span></label>
+        <input type="password" id="reg-password" name="password" placeholder="Minimum 12 characters"
+               autocomplete="new-password" aria-required="true"
+               aria-describedby="pw-hint">
+        <!-- Password strength indicator -->
+        <div class="pw-strength" aria-hidden="true">
+          <div class="pw-bar active"></div>
+          <div class="pw-bar active"></div>
+          <div class="pw-bar"></div>
+          <div class="pw-bar"></div>
+        </div>
+        <span class="pw-label" id="pw-hint">Strength: Fair — add numbers and symbols to strengthen</span>
+      </div>
+
+      <div class="form-group">
+        <label for="confirm-password">Confirm password <span class="required" aria-hidden="true">*</span></label>
+        <input type="password" id="confirm-password" name="confirmPassword" placeholder="Re-enter your password"
+               autocomplete="new-password" aria-required="true">
+      </div>
+
+      <div class="checkbox-group">
+        <input type="checkbox" id="terms" name="terms" aria-required="true">
+        <label for="terms">
+          I agree to the <a href="#" aria-label="Read terms and conditions">Terms & Conditions</a>
+          and <a href="#" aria-label="Read privacy policy">Privacy Policy</a>.
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <a href="wireframe-SCR-003-email-verification.html" class="btn btn-primary btn-lg w-full" id="btn-register"
+           role="button">
+          Create account
+        </a>
+        <a href="wireframe-SCR-001-login.html" class="btn btn-secondary btn-lg w-full" id="link-login">
+          Back to sign in
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <div class="wireframe-annotation" style="margin-top: var(--space-4); border-radius: var(--radius-md);">
+    <span class="scr-id">SCR-002</span>
+    <span>Registration</span>
+    <span class="priority-badge">P0</span>
+    <span class="uxr-tags">UXR: 201, 202, 204, 301, 303, 501, 601</span>
+  </div>
+</div>
+
+</body>
+</html>

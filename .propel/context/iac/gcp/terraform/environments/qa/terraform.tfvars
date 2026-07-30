@@ -1,0 +1,16 @@
+project_id          = "akhila-gcp-123-493309"
+project_name        = "patient-access"
+environment         = "qa"
+region              = "us-central1"
+owner               = "platform-team"
+cost_center         = "healthcare-platform"
+sql_tier            = "db-g1-small"
+sql_ha              = false
+redis_tier          = "BASIC"
+redis_memory_gb     = 1
+min_instances       = 1
+max_instances       = 5
+ollama_machine_type = "e2-standard-2"
+deletion_protection = false
+alert_email         = "ops@patient-access.example.com"
+domain_name         = "qa.patient-access.example.com"

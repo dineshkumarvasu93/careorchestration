@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Workflow Tracking View</title>
+  <link rel="stylesheet" href="./workflow-tracking.css">
+</head>
+<body>
+  <header class="hero">
+    <h1>Workflow Tracking</h1>
+    <p>Task lifecycle statuses and escalation markers for a run.</p>
+  </header>
+
+  <main class="panel" aria-label="Workflow tracking workspace">
+    <section class="card">
+      <h2>Run Lookup</h2>
+      <form id="tracking-form">
+        <label for="run-id">Run ID</label>
+        <div class="row">
+          <input id="run-id" name="runId" type="text" placeholder="RUN-..." required>
+          <button type="submit">Load Tracking</button>
+        </div>
+      </form>
+      <p id="status-line" class="status" role="status" aria-live="polite">Enter a run ID to view status summary.</p>
+    </section>
+
+    <section class="card">
+      <h2>Summary</h2>
+      <dl class="summary-grid">
+        <div><dt>Run</dt><dd id="sum-run">-</dd></div>
+        <div><dt>Patient</dt><dd id="sum-patient">-</dd></div>
+        <div><dt>Run Status</dt><dd id="sum-run-status">-</dd></div>
+        <div><dt>Task Count</dt><dd id="sum-task-count">-</dd></div>
+        <div><dt>Escalations</dt><dd id="sum-escalations" data-testid="escalation-count">0</dd></div>
+      </dl>
+    </section>
+
+    <section class="card">
+      <h2>Tasks</h2>
+      <div id="task-empty" class="empty">No task data loaded.</div>
+      <table id="task-table" class="hidden" data-testid="tracking-table">
+        <thead>
+          <tr>
+            <th>Task</th>
+            <th>Owner</th>
+            <th>Status</th>
+            <th>Gap</th>
+            <th>Due</th>
+            <th>Escalation</th>
+          </tr>
+        </thead>
+        <tbody id="task-body"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script type="module" src="./workflow-tracking.js"></script>
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCR-008 — Booking Calendar | PropelIQ Health</title>
+<link rel="stylesheet" href="wireframe-shared.css">
+<style>
+  .calendar-container { background: white; border: 1px solid var(--neutral-200); border-radius: var(--radius-xl); padding: var(--space-6); box-shadow: var(--shadow-1); }
+  .calendar-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-6); }
+  .cal-month { font-size: var(--text-h3); font-weight: 700; color: var(--neutral-800); }
+  .cal-nav-btn { width: 36px; height: 36px; border: 1px solid var(--neutral-200); border-radius: var(--radius-md); background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all var(--transition-micro); }
+  .cal-nav-btn:hover { background: var(--neutral-50); border-color: var(--color-teal-500); }
+  .provider-filter { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); flex-wrap: wrap; }
+  .provider-chip { font-size: var(--text-body-sm); padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); border: 1.5px solid var(--neutral-200); background: white; cursor: pointer; transition: all var(--transition-micro); }
+  .provider-chip.active { border-color: var(--color-teal-500); background: var(--color-teal-100); color: var(--color-teal-500); font-weight: 600; }
+  .time-col { font-family: var(--font-mono); font-size: var(--text-body-sm); color: var(--neutral-500); padding: var(--space-1) var(--space-3) var(--space-1) 0; text-align: right; white-space: nowrap; width: 60px; }
+  .slot-row { display: flex; gap: 4px; margin-bottom: 4px; align-items: center; }
+  .slot-cell { width: 100%; height: 36px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: var(--text-caption); font-weight: 600; cursor: pointer; transition: all var(--transition-micro); border: 1px solid transparent; }
+  .slot-cell:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+  .slot-available { background: var(--slot-available-bg); color: var(--slot-available); border-color: #BBF7D0; }
+  .slot-available:hover { filter: brightness(0.95); }
+  .slot-unavailable { background: var(--slot-unavailable-bg); color: var(--slot-unavailable); cursor: default; }
+  .slot-preferred { background: var(--slot-preferred-bg); color: var(--slot-preferred); border-color: #FDE68A; }
+  .slot-selected { background: var(--color-teal-500); color: white; border-color: var(--color-teal-400); }
+  .day-header { font-size: var(--text-body-sm); font-weight: 600; color: var(--neutral-500); text-align: center; padding: var(--space-2); border-bottom: 1px solid var(--neutral-200); }
+  .day-num { font-size: var(--text-h4); font-weight: 700; color: var(--neutral-800); }
+  .day-today .day-num { color: var(--color-teal-500); }
+  .calendar-legend { display: flex; gap: var(--space-4); flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-body-sm); color: var(--neutral-600); }
+  .legend-dot { width: 16px; height: 16px; border-radius: var(--radius-sm); }
+  .sidebar-booking { width: 280px; flex-shrink: 0; }
+  .selected-slot-card { background: var(--color-teal-100); border: 2px solid var(--color-teal-500); border-radius: var(--radius-lg); padding: var(--space-4); margin-bottom: var(--space-4); }
+  .empty-slot-state { text-align: center; padding: var(--space-8); color: var(--neutral-500); }
+</style>
+</head>
+<body>
+
+<!-- Navigation Map
+| Element          | Action | Target Screen                  |
+|------------------|--------|--------------------------------|
+| #btn-continue    | click  | SCR-009 (Booking & Insurance)  |
+| #link-dashboard  | click  | SCR-004 (Patient Dashboard)    |
+-->
+
+<div class="app-shell">
+  <header class="topbar" role="banner">
+    <div class="topbar-logo"><div class="logo-icon">P</div>PropelIQ Health</div>
+    <div class="topbar-spacer"></div>
+    <span class="topbar-role-badge">Patient</span>
+    <div class="topbar-avatar" tabindex="0">JS</div>
+    <button class="topbar-logout">Sign out</button>
+  </header>
+
+  <div class="app-main">
+    <nav class="sidebar" aria-label="Patient navigation">
+      <div class="sidebar-section-label">Patient Portal</div>
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-004-patient-dashboard.html"><span class="nav-icon">⊞</span> Dashboard</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-005-intake-method.html"><span class="nav-icon">📋</span> My Intake</a></li>
+        <li class="sidebar-nav-item active"><a href="#" aria-current="page"><span class="nav-icon">📅</span> Book Appointment</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-015-documents-upload.html"><span class="nav-icon">📄</span> My Documents</a></li>
+      </ul>
+    </nav>
+
+    <main class="page-content" id="main-content" style="max-width:100%; padding: var(--space-6) var(--space-6);">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="wireframe-SCR-004-patient-dashboard.html" id="link-dashboard">Dashboard</a>
+        <span class="sep">›</span>
+        <span class="current" aria-current="page">Book appointment</span>
+      </nav>
+
+      <div class="page-header" style="margin-bottom: var(--space-4);">
+        <div>
+          <h1 class="page-title">Choose an appointment slot</h1>
+          <p class="page-subtitle">Select an available time with your preferred provider.</p>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:var(--space-6); align-items:flex-start;">
+        <!-- Calendar -->
+        <div style="flex:1; min-width:0;">
+          <div class="calendar-container">
+            <!-- Month nav -->
+            <div class="calendar-nav">
+              <button class="cal-nav-btn" aria-label="Previous week">‹</button>
+              <div class="cal-month">April 2026</div>
+              <button class="cal-nav-btn" aria-label="Next week">›</button>
+            </div>
+
+            <!-- Provider filter -->
+            <div class="provider-filter" aria-label="Filter by provider">
+              <span style="font-size:var(--text-body-sm);color:var(--neutral-500);">Provider:</span>
+              <button class="provider-chip active">All providers</button>
+              <button class="provider-chip">Dr. R. Patel</button>
+              <button class="provider-chip">Dr. M. Chen</button>
+              <button class="provider-chip">Nurse T. Okafor</button>
+            </div>
+
+            <!-- Calendar grid -->
+            <div role="grid" aria-label="Appointment slots for week of 20–24 April 2026">
+              <!-- Day headers -->
+              <div style="display:grid; grid-template-columns: 60px repeat(5,1fr); gap:4px; margin-bottom:var(--space-3);">
+                <div></div>
+                <div class="day-header"><div>Mon</div><div class="day-num">20</div></div>
+                <div class="day-header day-today"><div>Tue</div><div class="day-num" style="color:var(--color-teal-500);">21</div></div>
+                <div class="day-header"><div>Wed</div><div class="day-num">22</div></div>
+                <div class="day-header"><div>Thu</div><div class="day-num">23</div></div>
+                <div class="day-header"><div>Fri</div><div class="day-num">24</div></div>
+              </div>
+
+              <!-- Slot rows -->
+              <div class="slot-row" role="row">
+                <div class="time-col" role="rowheader">09:00</div>
+                <div class="slot-cell slot-available" role="gridcell" tabindex="0" aria-label="Monday 20 April 9:00 AM — Available">✓</div>
+                <div class="slot-cell slot-unavailable" role="gridcell" tabindex="-1" aria-label="Tuesday 21 April 9:00 AM — Unavailable">—</div>
+                <div class="slot-cell slot-available" role="gridcell" tabindex="0" aria-label="Wednesday 22 April 9:00 AM — Available">✓</div>
+                <div class="slot-cell slot-available" role="gridcell" tabindex="0" aria-label="Thursday 23 April 9:00 AM — Available">✓</div>
+                <div class="slot-cell slot-unavailable" role="gridcell" tabindex="-1" aria-label="Friday 24 April 9:00 AM — Unavailable">—</div>
+              </div>
+              <div class="slot-row" role="row">
+                <div class="time-col" role="rowheader">09:30</div>
+                <div class="slot-cell slot-unavailable" role="gridcell" tabindex="-1" aria-label="Monday 20 April 9:30 AM — Unavailable">—</div>
+                <div class="slot-cell slot-available" role="gridcell" tabindex="0" aria-label="Tuesday 21 April 9:30 AM — Available">✓</div>
+                <div class="slot-cell slot-preferred" role="gridcell" tabindex="0" aria-label="Wednesday 22 April 9:30 AM — On waitlist">★</div>
+                <div class="slot-cell slot-unavailable" role="gridcell" tabindex="-1" aria-label="Thursday 23 April 9:30 AM — Unavailable">—</div>
+                <div class="slot-cell slot-available" role="gridcell" tabindex="0" aria-label="Friday 24 April 9:30 AM — Available">✓</div>
+              </div>
+              <div class="slot-row" role="row">
+                <div class="time-col" role="rowheader">10:00</div>
+                <div class="slot-cell slot-available" role="gridcell" tabindex="0" aria-label="Monday 20 April 10:00 AM — Available">✓</div>
+                <div class="slot-cell slot-available" role="gridcell" tabindex="0" aria-label="Tuesday 21 April 10:00 AM — Available">✓</div>
+                <div class="slot-cell slot-selected" role="gridcell" tabindex="0" aria-label="Wednesday 22 April 10:00 AM — Selected" aria-selected="true">✓</div>
+                <div class="slot-cell slot-available" role="gridcell" tabindex="0" aria-label="Thursday 23 April 10:00 AM — Available">✓</div>
+                <div class="slot-cell slot-unavailable" role="gridcell" tabindex="-1" aria-label="Friday 24 April 10:00 AM — Unavailable">—</div>
+              </div>
+              <div class="slot-row" role="row">
+                <div class="time-col" role="rowheader">10:30</div>
+                <div class="slot-cell slot-unavailable" role="gridcell" tabindex="-1" aria-label="Monday 20 April 10:30 AM — Unavailable">—</div>
+                <div class="slot-cell slot-preferred" role="gridcell" tabindex="0" aria-label="Tuesday 21 April 10:30 AM — On waitlist">★</div>
+                <div class="slot-cell slot-available" role="gridcell" tabindex="0" aria-label="Wednesday 22 April 10:30 AM — Available">✓</div>
+                <div class="slot-cell slot-available" role="gridcell" tabindex="0" aria-label="Thursday 23 April 10:30 AM — Available">✓</div>
+                <div class="slot-cell slot-available" role="gridcell" tabindex="0" aria-label="Friday 24 April 10:30 AM — Available">✓</div>
+              </div>
+              <div class="slot-row" role="row">
+                <div class="time-col" role="rowheader">14:00</div>
+                <div class="slot-cell slot-available" role="gridcell" tabindex="0" aria-label="Monday 20 April 2:00 PM — Available">✓</div>
+                <div class="slot-cell slot-available" role="gridcell" tabindex="0" aria-label="Tuesday 21 April 2:00 PM — Available">✓</div>
+                <div class="slot-cell slot-available" role="gridcell" tabindex="0" aria-label="Wednesday 22 April 2:00 PM — Available">✓</div>
+                <div class="slot-cell slot-unavailable" role="gridcell" tabindex="-1" aria-label="Thursday 23 April 2:00 PM — Unavailable">—</div>
+                <div class="slot-cell slot-available" role="gridcell" tabindex="0" aria-label="Friday 24 April 2:00 PM — Available">✓</div>
+              </div>
+            </div>
+
+            <!-- Legend -->
+            <div class="calendar-legend" style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--neutral-200);" aria-label="Slot colour legend">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--slot-available-bg); border:1px solid #BBF7D0;" aria-hidden="true"></div> Available ✓</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--slot-unavailable-bg);" aria-hidden="true"></div> Unavailable —</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--slot-preferred-bg); border:1px solid #FDE68A;" aria-hidden="true"></div> Waitlist ★</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--color-teal-500);" aria-hidden="true"></div> Selected</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Booking sidebar -->
+        <div class="sidebar-booking">
+          <div class="card">
+            <h3 style="margin-bottom: var(--space-4);">Selected slot</h3>
+            <div class="selected-slot-card" aria-live="polite" aria-label="Selected slot: Wednesday 22 April 2026 at 10:00 AM">
+              <div style="font-weight:700; color:var(--color-navy-600);">Wed 22 April 2026</div>
+              <div style="font-size:var(--text-h3); font-weight:700; color:var(--color-teal-500);">10:00 AM</div>
+              <div style="font-size:var(--text-body-sm); color:var(--neutral-500); margin-top:var(--space-1);">Dr. R. Patel — General Consultation</div>
+              <div style="font-size:var(--text-body-sm); color:var(--neutral-500);">Duration: 30 minutes</div>
+            </div>
+            <a href="wireframe-SCR-009-booking-insurance.html" class="btn btn-primary btn-md w-full" id="btn-continue">
+              Continue →
+            </a>
+            <a href="wireframe-SCR-004-patient-dashboard.html" class="btn btn-ghost btn-md w-full" style="margin-top:var(--space-2);">
+              Cancel
+            </a>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Toast example (non-critical failure) -->
+<div class="toast-container" role="status" aria-live="polite">
+  <div class="toast toast-warning" role="status">
+    <span>⚠</span>
+    <span>Calendar sync unavailable. Your appointment will still be confirmed.</span>
+    <button style="margin-left:auto; background:none; border:none; color:white; cursor:pointer;" aria-label="Dismiss">×</button>
+  </div>
+</div>
+
+<div class="wireframe-annotation">
+  <span class="scr-id">SCR-008</span>
+  <span>Booking Calendar</span>
+  <span class="priority-badge">P0</span>
+  <span class="uxr-tags">UXR: 101, 201, 202, 301, 501, 502, 602, 603, 604</span>
+</div>
+
+</body>
+</html>

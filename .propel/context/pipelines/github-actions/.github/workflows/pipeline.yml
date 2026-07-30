@@ -1,0 +1,1020 @@
+name: CI/CD Pipeline
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Single unified pipeline covering all stages:
+#   Stage 1 — CI:       Build, Lint, Test, Security Scan   (every push / PR)
+#   Stage 2 — Dev CD:   Deploy dev                         (push to develop)
+#   Stage 3 — QA CD:    Deploy QA                          (after dev, on develop)
+#   Stage 4 — Staging:  Deploy staging (approval gate)     (push to main)
+#   Stage 5 — Prod:     Deploy prod (approval + canary)    (tag v*.*.*)
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  push:
+    branches: [develop, main, 'feature/**']
+    tags: ['v*.*.*']
+  pull_request:
+    branches: [develop, main]
+  schedule:
+    - cron: '0 0 * * 0'   # Weekly Sunday midnight UTC — security-only run
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# STAGE 1 — CI
+# Runs on: every push (any branch / tag) and every pull_request
+# ═══════════════════════════════════════════════════════════════════════════════
+
+  # ── CICD-001: Build .NET 9 API ──────────────────────────────────────────────
+  build-api:
+    name: "[CI] Build API"
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore packages
+        run: dotnet restore PropelIQ-Stub-Copilot.sln
+
+      - name: Build (Release)
+        run: dotnet build PropelIQ-Stub-Copilot.sln --configuration Release --no-restore
+
+      - name: Upload API build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-build
+          path: api/bin/Release/
+          retention-days: 1
+
+  # ── CICD-002: Build React SPA (CI — no env-specific URL) ────────────────────
+  build-frontend-ci:
+    name: "[CI] Build Frontend"
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        run: cd client && npm ci
+
+      - name: Build SPA
+        run: cd client && npm run build
+
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build-ci
+          path: client/dist/
+          retention-days: 1
+
+  # ── CICD-010/011: Lint ───────────────────────────────────────────────────────
+  lint:
+    name: "[CI] Lint"
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+
+      - name: Restore .NET packages
+        run: dotnet restore PropelIQ-Stub-Copilot.sln
+
+      - name: dotnet format (CICD-010)
+        run: dotnet format PropelIQ-Stub-Copilot.sln --verify-no-changes
+
+      - name: Install client dependencies
+        run: cd client && npm ci
+
+      - name: ESLint (CICD-011)
+        run: cd client && npx eslint src/
+
+  # ── CICD-030/032: API unit tests with ephemeral PostgreSQL + Redis ───────────
+  unit-tests:
+    name: "[CI] Unit Tests"
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    needs: [build-api]
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U testuser -d testdb"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: Host=localhost;Port=5432;Database=testdb;Username=testuser;Password=testpassword
+      REDIS_URL: redis://localhost:6379
+      JWT_SIGNING_KEY: ${{ secrets.CI_JWT_SIGNING_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore packages
+        run: dotnet restore PropelIQ-Stub-Copilot.sln
+
+      - name: Build (Release)
+        run: dotnet build PropelIQ-Stub-Copilot.sln --configuration Release --no-restore
+
+      - name: Run migrations
+        run: dotnet ef database update --project api/Api.csproj
+
+      - name: Run tests
+        run: |
+          mkdir -p test-results
+          dotnet test api.tests/Api.Tests.csproj \
+            --configuration Release \
+            --no-build \
+            --logger "junit;LogFilePath=../test-results/api-tests.xml" \
+            --results-directory test-results
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-test-results
+          path: test-results/api-tests.xml
+
+  # ── CICD-031/032: E2E Playwright smoke tests ─────────────────────────────────
+  e2e-tests:
+    name: "[CI] E2E Tests (Playwright)"
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    needs: [unit-tests, build-frontend-ci]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install SPA dependencies
+        run: cd client && npm ci
+
+      - name: Install E2E dependencies
+        run: cd e2e && npm ci
+
+      - name: Install Playwright Chromium
+        run: cd e2e && npx playwright install chromium --with-deps
+
+      - name: Install wait-on
+        run: npm install -g wait-on
+
+      - name: Start SPA dev server
+        run: |
+          cd client && npm run dev &
+          npx wait-on http://localhost:3000 --timeout 60000
+
+      - name: Run Playwright smoke tests
+        run: |
+          mkdir -p test-results
+          cd e2e && npx playwright test tests/smoke/
+
+      - name: Upload E2E results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: test-results/
+
+  # ── CICD-034: PITR smoke test ────────────────────────────────────────────────
+  pitr-smoke-test:
+    name: "[CI] PITR Smoke Test"
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ${{ secrets.CI_PITR_DB_PASSWORD }}
+          POSTGRES_DB: patientaccess_pitr
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable WAL archiving
+        run: |
+          docker exec ${{ job.services.postgres.id }} \
+            psql -U postgres -d patientaccess_pitr \
+            -c "ALTER SYSTEM SET wal_level = 'replica';"
+          docker exec ${{ job.services.postgres.id }} \
+            psql -U postgres -d patientaccess_pitr \
+            -c "SELECT pg_reload_conf();"
+
+      - name: Create test table and pre-backup row
+        env:
+          PGPASSWORD: ${{ secrets.CI_PITR_DB_PASSWORD }}
+        run: |
+          psql "postgresql://postgres@localhost:5434/patientaccess_pitr" \
+            -c "CREATE TABLE pitr_test (id SERIAL PRIMARY KEY, val TEXT);" \
+            -c "INSERT INTO pitr_test VALUES (DEFAULT, 'pre-backup-row');"
+
+      - name: Take base backup
+        run: |
+          mkdir -p pitr_backup pitr_wal
+          PGPASSWORD=${{ secrets.CI_PITR_DB_PASSWORD }} pg_basebackup \
+            -h localhost -p 5434 -U postgres \
+            -D pitr_backup -Ft -z -P
+
+      - name: Record restore target timestamp
+        id: timestamp
+        run: echo "ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
+      - name: Insert post-backup row (must NOT appear after restore)
+        env:
+          PGPASSWORD: ${{ secrets.CI_PITR_DB_PASSWORD }}
+        run: |
+          psql "postgresql://postgres@localhost:5434/patientaccess_pitr" \
+            -c "INSERT INTO pitr_test VALUES (DEFAULT, 'post-backup-row');"
+
+      - name: Restore and assert row count = 1
+        run: bash scripts/ci-pitr-restore-test.sh "${{ steps.timestamp.outputs.ts }}"
+
+  # ── CICD-020: CodeQL SAST ────────────────────────────────────────────────────
+  sast:
+    name: "[Security] CodeQL SAST"
+    if: |
+      github.event_name == 'schedule' ||
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [csharp, javascript]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended
+
+      - name: Setup .NET 9 (C# only)
+        if: matrix.language == 'csharp'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Build for C# analysis
+        if: matrix.language == 'csharp'
+        run: |
+          dotnet restore PropelIQ-Stub-Copilot.sln
+          dotnet build PropelIQ-Stub-Copilot.sln --configuration Release --no-restore
+
+      - name: CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+
+  # ── CICD-022: SCA — dotnet + npm + Snyk ─────────────────────────────────────
+  sca:
+    name: "[Security] SCA"
+    if: |
+      github.event_name == 'schedule' ||
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+
+      - name: Restore .NET packages
+        run: dotnet restore PropelIQ-Stub-Copilot.sln
+
+      - name: dotnet vulnerable packages check
+        run: |
+          OUTPUT=$(dotnet list package --vulnerable --include-transitive 2>&1)
+          echo "$OUTPUT"
+          if echo "$OUTPUT" | grep -qi "critical"; then
+            echo "Critical vulnerable .NET dependency detected"
+            exit 1
+          fi
+
+      - name: Install client dependencies
+        run: cd client && npm ci
+
+      - name: npm audit
+        run: cd client && npm audit --audit-level=high
+
+      - name: Snyk SCA (optional — continues if token absent)
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --file=client/package.json
+
+  # ── Dependency review (PRs only) ────────────────────────────────────────────
+  dependency-review:
+    name: "[Security] Dependency Review"
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# STAGE 2 — CD: Deploy to Dev
+# Runs on: push to develop (after CI passes)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+  dev-build-frontend:
+    name: "[Dev] Build SPA"
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    needs: [unit-tests, e2e-tests]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        run: cd client && npm ci
+
+      - name: Build SPA (dev — bakes DEV_API_BASE_URL)
+        run: cd client && npm run build
+        env:
+          VITE_API_BASE_URL: ${{ secrets.DEV_API_BASE_URL }}
+
+      - name: Create .htaccess for SPA routing
+        run: |
+          cat > client/dist/.htaccess << 'EOF'
+          Options -MultiViews
+          RewriteEngine On
+          RewriteCond %{REQUEST_FILENAME} !-f
+          RewriteRule ^ index.html [QSA,L]
+          EOF
+
+      - name: Upload SPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: spa-dist-dev
+          path: client/dist/
+          retention-days: 1
+
+  dev-deploy-api:
+    name: "[Dev] Deploy API → Railway"
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    needs: [unit-tests, e2e-tests]
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Configure Railway env vars (dev)
+        run: |
+          railway variables set \
+            --environment dev --service api \
+            DATABASE_URL="${{ secrets.SUPABASE_DEV_CONNECTION_STRING }}" \
+            REDIS_URL="${{ secrets.REDIS_URL_DEV }}" \
+            JWT_SIGNING_KEY="${{ secrets.JWT_SIGNING_KEY }}" \
+            ASPNETCORE_ENVIRONMENT="Development" \
+            SEQ_URL="${{ secrets.SEQ_URL_DEV }}" \
+            OLLAMA_BASE_URL="${{ secrets.OLLAMA_BASE_URL_DEV }}"
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+
+      - name: Deploy API to Railway (dev)
+        run: railway up --detach --environment dev --service api
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+
+      - name: Run EF Core migrations (Supabase dev)
+        run: |
+          dotnet tool restore
+          dotnet ef database update --project api/Api.csproj
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DEV_CONNECTION_STRING }}
+
+      - name: Health check
+        run: |
+          sleep 30
+          curl --fail --retry 6 --retry-delay 10 --retry-connrefused \
+            "${{ secrets.DEV_API_BASE_URL }}/api/health"
+
+  dev-deploy-frontend:
+    name: "[Dev] Deploy SPA → InfinityFree"
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    needs: [dev-build-frontend, dev-deploy-api]
+    environment: dev
+    steps:
+      - name: Download SPA artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: spa-dist-dev
+          path: dist/
+
+      - name: Install lftp
+        run: sudo apt-get install -y lftp
+
+      - name: FTP upload to InfinityFree (dev)
+        run: |
+          lftp -c "
+          set ftp:ssl-allow yes;
+          set ssl:verify-certificate no;
+          open -u '${{ secrets.INFINITYFREE_FTP_USERNAME_DEV }}','${{ secrets.INFINITYFREE_FTP_PASSWORD_DEV }}' '${{ secrets.INFINITYFREE_FTP_HOST_DEV }}';
+          mirror --reverse --delete --verbose dist/ '${{ secrets.INFINITYFREE_FTP_PATH_DEV }}/';
+          bye"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# STAGE 3 — CD: Deploy to QA
+# Runs on: push to develop (after dev deployment succeeds)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+  qa-build-frontend:
+    name: "[QA] Build SPA"
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    needs: [dev-deploy-api, dev-deploy-frontend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        run: cd client && npm ci
+
+      - name: Build SPA (qa — bakes QA_API_BASE_URL)
+        run: cd client && npm run build
+        env:
+          VITE_API_BASE_URL: ${{ secrets.QA_API_BASE_URL }}
+
+      - name: Create .htaccess for SPA routing
+        run: |
+          cat > client/dist/.htaccess << 'EOF'
+          Options -MultiViews
+          RewriteEngine On
+          RewriteCond %{REQUEST_FILENAME} !-f
+          RewriteRule ^ index.html [QSA,L]
+          EOF
+
+      - name: Upload SPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: spa-dist-qa
+          path: client/dist/
+          retention-days: 1
+
+  qa-deploy-api:
+    name: "[QA] Deploy API → Railway"
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    needs: [dev-deploy-api, dev-deploy-frontend]
+    environment: qa
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Configure Railway env vars (qa)
+        run: |
+          railway variables set \
+            --environment qa --service api \
+            DATABASE_URL="${{ secrets.SUPABASE_QA_CONNECTION_STRING }}" \
+            REDIS_URL="${{ secrets.REDIS_URL_QA }}" \
+            JWT_SIGNING_KEY="${{ secrets.JWT_SIGNING_KEY }}" \
+            ASPNETCORE_ENVIRONMENT="Development" \
+            SEQ_URL="${{ secrets.SEQ_URL_QA }}" \
+            OLLAMA_BASE_URL="${{ secrets.OLLAMA_BASE_URL_QA }}"
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+
+      - name: Deploy API to Railway (qa)
+        run: railway up --detach --environment qa --service api
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+
+      - name: Run EF Core migrations (Supabase qa)
+        run: |
+          dotnet tool restore
+          dotnet ef database update --project api/Api.csproj
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_QA_CONNECTION_STRING }}
+
+      - name: Health check
+        run: |
+          sleep 30
+          curl --fail --retry 6 --retry-delay 10 --retry-connrefused \
+            "${{ secrets.QA_API_BASE_URL }}/api/health"
+
+      - name: Run smoke tests
+        run: |
+          dotnet restore PropelIQ-Stub-Copilot.sln
+          mkdir -p test-results
+          dotnet test api.tests/Api.Tests.csproj \
+            --filter Category=Smoke \
+            --logger "junit;LogFilePath=../test-results/qa-smoke.xml" \
+            --results-directory test-results
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_QA_CONNECTION_STRING }}
+
+      - name: Upload smoke test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-smoke-results
+          path: test-results/qa-smoke.xml
+
+  qa-deploy-frontend:
+    name: "[QA] Deploy SPA → InfinityFree"
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    needs: [qa-build-frontend, qa-deploy-api]
+    environment: qa
+    steps:
+      - name: Download SPA artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: spa-dist-qa
+          path: dist/
+
+      - name: Install lftp
+        run: sudo apt-get install -y lftp
+
+      - name: FTP upload to InfinityFree (qa)
+        run: |
+          lftp -c "
+          set ftp:ssl-allow yes;
+          set ssl:verify-certificate no;
+          open -u '${{ secrets.INFINITYFREE_FTP_USERNAME_QA }}','${{ secrets.INFINITYFREE_FTP_PASSWORD_QA }}' '${{ secrets.INFINITYFREE_FTP_HOST_QA }}';
+          mirror --reverse --delete --verbose dist/ '${{ secrets.INFINITYFREE_FTP_PATH_QA }}/';
+          bye"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# STAGE 4 — CD: Deploy to Staging
+# Runs on: push to main (approval gate enforced via GitHub Environment)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+  staging-build-frontend:
+    name: "[Staging] Build SPA"
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: [unit-tests, e2e-tests]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        run: cd client && npm ci
+
+      - name: Build SPA (staging — bakes STAGING_API_BASE_URL)
+        run: cd client && npm run build
+        env:
+          VITE_API_BASE_URL: ${{ secrets.STAGING_API_BASE_URL }}
+
+      - name: Create .htaccess for SPA routing
+        run: |
+          cat > client/dist/.htaccess << 'EOF'
+          Options -MultiViews
+          RewriteEngine On
+          RewriteCond %{REQUEST_FILENAME} !-f
+          RewriteRule ^ index.html [QSA,L]
+          EOF
+
+      - name: Upload SPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: spa-dist-staging
+          path: client/dist/
+          retention-days: 3
+
+  staging-deploy-api:
+    name: "[Staging] Deploy API → Railway"
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: [staging-build-frontend]
+    environment:
+      name: staging
+      url: ${{ secrets.STAGING_API_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Configure Railway env vars (staging)
+        run: |
+          railway variables set \
+            --environment staging --service api \
+            DATABASE_URL="${{ secrets.SUPABASE_STAGING_CONNECTION_STRING }}" \
+            REDIS_URL="${{ secrets.REDIS_URL_STAGING }}" \
+            JWT_SIGNING_KEY="${{ secrets.JWT_SIGNING_KEY }}" \
+            ASPNETCORE_ENVIRONMENT="Staging" \
+            SEQ_URL="${{ secrets.SEQ_URL_STAGING }}" \
+            OLLAMA_BASE_URL="${{ secrets.OLLAMA_BASE_URL_STAGING }}"
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+
+      - name: Deploy API to Railway (staging)
+        run: railway up --detach --environment staging --service api
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+
+      - name: Run EF Core migrations (Supabase staging)
+        run: |
+          dotnet tool restore
+          dotnet ef database update --project api/Api.csproj
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_STAGING_CONNECTION_STRING }}
+
+      - name: Health check
+        run: |
+          sleep 30
+          curl --fail --retry 8 --retry-delay 10 --retry-connrefused \
+            "${{ secrets.STAGING_API_BASE_URL }}/api/health"
+
+      - name: Run smoke tests
+        run: |
+          dotnet restore PropelIQ-Stub-Copilot.sln
+          mkdir -p test-results
+          dotnet test api.tests/Api.Tests.csproj \
+            --filter Category=Smoke \
+            --logger "junit;LogFilePath=../test-results/staging-smoke.xml" \
+            --results-directory test-results
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_STAGING_CONNECTION_STRING }}
+
+      - name: Upload smoke results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-smoke-results
+          path: test-results/staging-smoke.xml
+
+  staging-deploy-frontend:
+    name: "[Staging] Deploy SPA → InfinityFree"
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: [staging-deploy-api]
+    environment:
+      name: staging
+      url: ${{ secrets.STAGING_FRONTEND_URL }}
+    steps:
+      - name: Download SPA artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: spa-dist-staging
+          path: dist/
+
+      - name: Install lftp
+        run: sudo apt-get install -y lftp
+
+      - name: FTP upload to InfinityFree (staging)
+        run: |
+          lftp -c "
+          set ftp:ssl-allow yes;
+          set ssl:verify-certificate no;
+          open -u '${{ secrets.INFINITYFREE_FTP_USERNAME_STAGING }}','${{ secrets.INFINITYFREE_FTP_PASSWORD_STAGING }}' '${{ secrets.INFINITYFREE_FTP_HOST_STAGING }}';
+          mirror --reverse --delete --verbose dist/ '${{ secrets.INFINITYFREE_FTP_PATH_STAGING }}/';
+          bye"
+
+  staging-notify:
+    name: "[Staging] Notify"
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && always()
+    runs-on: ubuntu-latest
+    needs: [staging-deploy-api, staging-deploy-frontend]
+    steps:
+      - name: Notify success
+        if: needs.staging-deploy-api.result == 'success' && needs.staging-deploy-frontend.result == 'success'
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: '{"text":"✅ Staging deployment successful — commit ${{ github.sha }}"}'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Notify failure
+        if: needs.staging-deploy-api.result == 'failure' || needs.staging-deploy-frontend.result == 'failure'
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: '{"text":"❌ Staging deployment FAILED — commit ${{ github.sha }} — ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  staging-rollback:
+    name: "[Staging] Rollback"
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && failure()
+    runs-on: ubuntu-latest
+    needs: [staging-deploy-api]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Rollback Railway staging
+        run: railway rollback --environment staging --service api
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+
+      - name: Notify Slack of rollback
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: '{"text":"⚠️ Staging API rolled back — commit ${{ github.sha }}"}'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# STAGE 5 — CD: Deploy to Production
+# Runs on: tag v*.*.* (approval gate + canary via GitHub Environment)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+  prod-build-frontend:
+    name: "[Prod] Build SPA"
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    needs: [unit-tests, e2e-tests]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        run: cd client && npm ci
+
+      - name: Build SPA (production — bakes PROD_API_BASE_URL)
+        run: cd client && npm run build
+        env:
+          VITE_API_BASE_URL: ${{ secrets.PROD_API_BASE_URL }}
+          NODE_ENV: production
+
+      - name: Create .htaccess for SPA routing
+        run: |
+          cat > client/dist/.htaccess << 'EOF'
+          Options -MultiViews
+          RewriteEngine On
+          RewriteCond %{REQUEST_FILENAME} !-f
+          RewriteRule ^ index.html [QSA,L]
+          EOF
+
+      - name: Upload SPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: spa-dist-prod-${{ github.ref_name }}
+          path: client/dist/
+          retention-days: 30
+
+  prod-deploy-canary:
+    name: "[Prod] Deploy Canary (10%) → Railway"
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    needs: [prod-build-frontend]
+    environment:
+      name: production
+      url: ${{ secrets.PROD_API_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Configure Railway env vars (production)
+        run: |
+          railway variables set \
+            --environment production --service api \
+            DATABASE_URL="${{ secrets.SUPABASE_PROD_CONNECTION_STRING }}" \
+            REDIS_URL="${{ secrets.REDIS_URL_PROD }}" \
+            JWT_SIGNING_KEY="${{ secrets.JWT_SIGNING_KEY }}" \
+            ASPNETCORE_ENVIRONMENT="Production" \
+            SEQ_URL="${{ secrets.SEQ_URL_PROD }}" \
+            OLLAMA_BASE_URL="${{ secrets.OLLAMA_BASE_URL_PROD }}"
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+
+      - name: Deploy canary (10%) to Railway production
+        run: railway up --detach --environment production --service api
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+          CANARY_WEIGHT: "10"
+
+      - name: Run EF Core migrations (Supabase prod)
+        run: |
+          dotnet tool restore
+          dotnet ef database update --project api/Api.csproj
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_PROD_CONNECTION_STRING }}
+
+      - name: Canary health check (10 requests)
+        run: |
+          sleep 30
+          for i in {1..10}; do
+            curl --fail --silent "${{ secrets.PROD_API_BASE_URL }}/api/health" \
+              || { echo "Health check $i failed"; exit 1; }
+            echo "Health check $i passed"
+          done
+
+      - name: Observe canary (5 min)
+        run: sleep 300
+
+      - name: Validate canary latency (20 requests)
+        run: |
+          for i in {1..20}; do
+            time curl --fail --silent "${{ secrets.PROD_API_BASE_URL }}/api/health" > /dev/null
+          done
+
+  prod-deploy-full:
+    name: "[Prod] Promote to Full (100%)"
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    needs: [prod-deploy-canary]
+    environment:
+      name: production
+      url: ${{ secrets.PROD_API_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Promote to 100% traffic
+        run: railway up --detach --environment production --service api
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+          CANARY_WEIGHT: "100"
+
+      - name: Final health check
+        run: |
+          sleep 20
+          curl --fail --retry 6 --retry-delay 10 --retry-connrefused \
+            "${{ secrets.PROD_API_BASE_URL }}/api/health"
+
+  prod-deploy-frontend:
+    name: "[Prod] Deploy SPA → InfinityFree"
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    needs: [prod-deploy-full]
+    environment:
+      name: production
+      url: ${{ secrets.PROD_FRONTEND_URL }}
+    steps:
+      - name: Download SPA artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: spa-dist-prod-${{ github.ref_name }}
+          path: dist/
+
+      - name: Install lftp
+        run: sudo apt-get install -y lftp
+
+      - name: FTP upload to InfinityFree (production)
+        run: |
+          lftp -c "
+          set ftp:ssl-allow yes;
+          set ssl:verify-certificate no;
+          open -u '${{ secrets.INFINITYFREE_FTP_USERNAME_PROD }}','${{ secrets.INFINITYFREE_FTP_PASSWORD_PROD }}' '${{ secrets.INFINITYFREE_FTP_HOST_PROD }}';
+          mirror --reverse --delete --verbose dist/ '${{ secrets.INFINITYFREE_FTP_PATH_PROD }}/';
+          bye"
+
+  prod-notify-success:
+    name: "[Prod] Notify Success"
+    if: startsWith(github.ref, 'refs/tags/v') && success()
+    runs-on: ubuntu-latest
+    needs: [prod-deploy-full, prod-deploy-frontend]
+    steps:
+      - name: Notify Slack
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: '{"text":"🚀 Production deployment successful — tag ${{ github.ref_name }} is live"}'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  prod-rollback:
+    name: "[Prod] Rollback"
+    if: startsWith(github.ref, 'refs/tags/v') && failure()
+    runs-on: ubuntu-latest
+    needs: [prod-deploy-canary, prod-deploy-full]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Rollback Railway production
+        run: railway rollback --environment production --service api
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+
+      - name: ALERT — Notify Slack of rollback
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: '{"text":"🚨 ALERT: Production rollback executed for tag ${{ github.ref_name }} — ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

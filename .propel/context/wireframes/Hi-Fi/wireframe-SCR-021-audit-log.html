@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCR-021 — Audit Log Viewer | PropelIQ Health</title>
+<link rel="stylesheet" href="wireframe-shared.css">
+<style>
+  .audit-table { width: 100%; border-collapse: collapse; }
+  .audit-table th { background: var(--neutral-50); font-size: var(--text-body-sm); font-weight: 600; color: var(--neutral-500); text-transform: uppercase; letter-spacing: 0.05em; padding: var(--space-3) var(--space-4); border-bottom: 2px solid var(--neutral-200); text-align: left; white-space: nowrap; }
+  .audit-table td { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--neutral-200); vertical-align: middle; font-size: var(--text-body-md); }
+  .audit-table tr:last-child td { border-bottom: none; }
+  .ts-cell { font-family: var(--font-mono); font-size: var(--text-body-sm); color: var(--neutral-500); white-space: nowrap; }
+  .action-cell { font-family: var(--font-mono); font-size: var(--text-body-sm); color: var(--color-navy-600); font-weight: 600; }
+  .details-cell { font-size: var(--text-body-sm); color: var(--neutral-600); max-width: 320px; }
+  .filter-panel { background: var(--neutral-50); border: 1px solid var(--neutral-200); border-radius: var(--radius-lg); padding: var(--space-5) var(--space-6); margin-bottom: var(--space-6); }
+  .filter-panel h3 { font-size: var(--text-body-lg); font-weight: 600; margin-bottom: var(--space-4); }
+  .filter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+  .read-only-notice { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-4); background: var(--neutral-100); border-radius: var(--radius-md); font-size: var(--text-body-sm); color: var(--neutral-500); margin-bottom: var(--space-4); }
+  .export-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); }
+  .page-numbers { display: flex; gap: var(--space-1); }
+  .page-num-btn { width: 32px; height: 32px; border-radius: var(--radius-sm); border: 1.5px solid var(--neutral-200); background: white; font-size: var(--text-body-sm); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .page-num-btn.current { background: var(--color-teal-500); color: white; border-color: var(--color-teal-500); }
+</style>
+</head>
+<body>
+
+<!-- Navigation Map
+| Element          | Action | Target Screen                     |
+|------------------|--------|-----------------------------------|
+| #nav-users       | click  | SCR-019 (Admin User Management)   |
+-->
+
+<div class="app-shell">
+  <header class="topbar" role="banner">
+    <div class="topbar-logo"><div class="logo-icon">P</div>PropelIQ Health</div>
+    <div class="topbar-spacer"></div>
+    <span class="topbar-role-badge" style="background:var(--color-error-bg);color:var(--color-error);">Admin</span>
+    <div class="topbar-avatar" tabindex="0">AC</div>
+    <button class="topbar-logout">Sign out</button>
+  </header>
+
+  <div class="app-main">
+    <nav class="sidebar" aria-label="Admin navigation">
+      <div class="sidebar-section-label">Admin Portal</div>
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-019-admin-users.html" id="nav-users"><span class="nav-icon">👥</span> User management</a></li>
+        <li class="sidebar-nav-item active"><a href="#" aria-current="page"><span class="nav-icon">📋</span> Audit log</a></li>
+      </ul>
+    </nav>
+
+    <main class="page-content" id="main-content">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Audit log</h1>
+          <p class="page-subtitle">Full immutable record of all system actions. Read-only — no entries can be edited or deleted.</p>
+        </div>
+      </div>
+
+      <!-- Read-only notice -->
+      <div class="read-only-notice" role="note" aria-label="This log is read-only">
+        <span>🔒</span>
+        <span>This log is <strong>read-only</strong>. Audit entries cannot be modified or deleted by any user role.</span>
+      </div>
+
+      <!-- Filter panel -->
+      <div class="filter-panel" role="search" aria-label="Filter audit log entries">
+        <h3>Filter log</h3>
+        <div class="filter-grid">
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="filter-start">From date</label>
+            <input type="text" id="filter-start" name="startDate" placeholder="DD/MM/YYYY" value="01/04/2026">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="filter-end">To date</label>
+            <input type="text" id="filter-end" name="endDate" placeholder="DD/MM/YYYY" value="17/04/2026">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="filter-actor">Actor (user)</label>
+            <input type="text" id="filter-actor" name="actor" placeholder="Name or email…">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="filter-action">Action type</label>
+            <select id="filter-action" name="actionType">
+              <option value="">All actions</option>
+              <option>USER_LOGIN</option>
+              <option>USER_CREATED</option>
+              <option>USER_DEACTIVATED</option>
+              <option>ROLE_CHANGED</option>
+              <option>PATIENT_VIEWED</option>
+              <option>APPOINTMENT_BOOKED</option>
+              <option>CONFLICT_ACKNOWLEDGED</option>
+              <option>CODE_FINALISED</option>
+              <option>DOCUMENT_UPLOADED</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="filter-resource">Resource type</label>
+            <select id="filter-resource" name="resourceType">
+              <option value="">All resources</option>
+              <option>User</option>
+              <option>Patient</option>
+              <option>Appointment</option>
+              <option>Document</option>
+              <option>Code</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0; display:flex; align-items:flex-end;">
+            <button class="btn btn-primary btn-md w-full" type="button" aria-label="Apply filters">Apply filters</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Export and count bar -->
+      <div class="export-bar">
+        <span style="font-size:var(--text-body-sm); color:var(--neutral-500);">Showing 50 of 1,247 entries (filtered)</span>
+        <button class="btn btn-secondary btn-sm" type="button" aria-label="Export audit log as CSV">Export CSV</button>
+      </div>
+
+      <!-- Audit log table -->
+      <div class="table-wrapper" role="region" aria-label="Audit log entries" tabindex="0">
+        <table class="audit-table" aria-label="System audit log">
+          <thead>
+            <tr>
+              <th scope="col">Timestamp</th>
+              <th scope="col">Actor</th>
+              <th scope="col">Action</th>
+              <th scope="col">Resource</th>
+              <th scope="col">Details</th>
+              <th scope="col">IP Address</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="ts-cell">2026-04-17 09:14:02</td>
+              <td>Dr. Rachel Patel</td>
+              <td class="action-cell">USER_LOGIN</td>
+              <td><span class="badge badge-info">User</span></td>
+              <td class="details-cell">Successful login via email/password</td>
+              <td class="ts-cell">192.168.1.42</td>
+            </tr>
+            <tr>
+              <td class="ts-cell">2026-04-17 09:15:31</td>
+              <td>Dr. Rachel Patel</td>
+              <td class="action-cell">PATIENT_VIEWED</td>
+              <td><span class="badge badge-info">Patient</span></td>
+              <td class="details-cell">Accessed 360° view for MRN-20244-A (Jane Smith)</td>
+              <td class="ts-cell">192.168.1.42</td>
+            </tr>
+            <tr>
+              <td class="ts-cell">2026-04-17 09:18:44</td>
+              <td>Dr. Rachel Patel</td>
+              <td class="action-cell">CONFLICT_ACKNOWLEDGED</td>
+              <td><span class="badge" style="background:var(--color-error-bg);color:var(--color-error);">Conflict</span></td>
+              <td class="details-cell">Resolved duplicate J18.9 for MRN-20244-A — note added</td>
+              <td class="ts-cell">192.168.1.42</td>
+            </tr>
+            <tr>
+              <td class="ts-cell">2026-04-17 09:25:10</td>
+              <td>Dr. Rachel Patel</td>
+              <td class="action-cell">CODE_FINALISED</td>
+              <td><span class="badge" style="background:var(--color-success-bg);color:var(--color-success);">Code</span></td>
+              <td class="details-cell">ICD-10: I10, E78.5 accepted; J18.9 rejected for MRN-20244-A</td>
+              <td class="ts-cell">192.168.1.42</td>
+            </tr>
+            <tr>
+              <td class="ts-cell">2026-04-17 08:55:00</td>
+              <td>Dr. Michael Chen</td>
+              <td class="action-cell">USER_LOGIN</td>
+              <td><span class="badge badge-info">User</span></td>
+              <td class="details-cell">Successful login via SSO</td>
+              <td class="ts-cell">192.168.1.55</td>
+            </tr>
+            <tr>
+              <td class="ts-cell">2026-04-16 17:42:18</td>
+              <td>Admin Clare</td>
+              <td class="action-cell">ROLE_CHANGED</td>
+              <td><span class="badge badge-neutral">User</span></td>
+              <td class="details-cell">Role for Priya Sharma changed: Patient → Inactive</td>
+              <td class="ts-cell">10.0.0.1</td>
+            </tr>
+            <tr>
+              <td class="ts-cell">2026-04-15 11:10:05</td>
+              <td>Jane Smith</td>
+              <td class="action-cell">APPOINTMENT_BOOKED</td>
+              <td><span class="badge" style="background:var(--color-warning-bg);color:var(--color-warning);">Appointment</span></td>
+              <td class="details-cell">Booked slot Wed 22 Apr 2026 10:00 with Dr. R. Patel — Ref BK-2026-04-0847</td>
+              <td class="ts-cell">203.0.113.48</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:var(--space-4);">
+        <span style="font-size:var(--text-body-sm); color:var(--neutral-500);">Page 1 of 25</span>
+        <div class="page-numbers" role="navigation" aria-label="Pagination">
+          <button class="page-num-btn" disabled aria-label="Previous page" aria-disabled="true">‹</button>
+          <button class="page-num-btn current" aria-label="Page 1, current" aria-current="page">1</button>
+          <button class="page-num-btn" aria-label="Page 2">2</button>
+          <button class="page-num-btn" aria-label="Page 3">3</button>
+          <span class="page-num-btn" style="border:none; cursor:default;">…</span>
+          <button class="page-num-btn" aria-label="Page 25">25</button>
+          <button class="page-num-btn" aria-label="Next page">›</button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="wireframe-annotation">
+  <span class="scr-id">SCR-021</span>
+  <span>Audit Log Viewer</span>
+  <span class="priority-badge">P2</span>
+  <span class="uxr-tags">UXR: 201, 301, 402, 502, 604</span>
+</div>
+
+</body>
+</html>

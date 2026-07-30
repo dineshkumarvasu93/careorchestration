@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCR-005 — Intake Method Selection | PropelIQ Health</title>
+<link rel="stylesheet" href="wireframe-shared.css">
+<style>
+  .method-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); max-width: 720px; }
+  .method-card { border: 2px solid var(--neutral-200); border-radius: var(--radius-xl); padding: var(--space-8); background: white; cursor: pointer; transition: all var(--transition-micro); text-decoration: none; color: inherit; display: flex; flex-direction: column; align-items: flex-start; }
+  .method-card:hover { border-color: var(--color-teal-500); box-shadow: var(--shadow-3); }
+  .method-card.selected { border-color: var(--color-teal-500); background: var(--color-teal-100); }
+  .method-icon { width: 56px; height: 56px; border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: var(--space-4); }
+  .method-ai { background: var(--color-ai-bg); }
+  .method-manual { background: var(--color-info-bg); }
+  .method-title { font-size: var(--text-h4); font-weight: 700; color: var(--neutral-800); margin-bottom: var(--space-2); }
+  .method-desc { font-size: var(--text-body-md); color: var(--neutral-500); line-height: 1.6; margin-bottom: var(--space-4); }
+  .method-duration { font-size: var(--text-body-sm); color: var(--neutral-400); display: flex; align-items: center; gap: var(--space-1); }
+  .recommended-badge { background: var(--color-ai-bg); color: var(--color-ai); font-size: var(--text-caption); font-weight: 700; padding: 2px var(--space-2); border-radius: var(--radius-full); border: 1px solid var(--color-ai); margin-bottom: var(--space-3); display: inline-block; }
+  .intro-block { max-width: 600px; margin-bottom: var(--space-8); }
+  .steps-hint { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-8); }
+  .step-dot { width: 28px; height: 28px; border-radius: 50%; background: var(--color-teal-500); color: white; display: flex; align-items: center; justify-content: center; font-size: var(--text-body-sm); font-weight: 700; flex-shrink: 0; }
+  .step-dot.done { background: var(--color-success); }
+  .step-line { height: 2px; flex: 1; background: var(--neutral-200); max-width: 60px; }
+  .step-label { font-size: var(--text-body-sm); color: var(--neutral-500); }
+</style>
+</head>
+<body>
+
+<!-- Navigation Map
+| Element          | Action | Target Screen              |
+|------------------|--------|----------------------------|
+| #btn-ai-intake   | click  | SCR-006 (AI Intake Chat)   |
+| #btn-manual      | click  | SCR-007 (Manual Intake)    |
+| #link-dashboard  | click  | SCR-004 (Patient Dashboard)|
+-->
+
+<div class="app-shell">
+  <header class="topbar" role="banner">
+    <div class="topbar-logo"><div class="logo-icon">P</div>PropelIQ Health</div>
+    <div class="topbar-spacer"></div>
+    <span class="topbar-role-badge">Patient</span>
+    <div class="topbar-avatar" tabindex="0">JS</div>
+    <button class="topbar-logout">Sign out</button>
+  </header>
+
+  <div class="app-main">
+    <nav class="sidebar" aria-label="Patient navigation">
+      <div class="sidebar-section-label">Patient Portal</div>
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-004-patient-dashboard.html"><span class="nav-icon">⊞</span> Dashboard</a></li>
+        <li class="sidebar-nav-item active"><a href="#" aria-current="page"><span class="nav-icon">📋</span> My Intake</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-008-booking-calendar.html"><span class="nav-icon">📅</span> Book Appointment</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-015-documents-upload.html"><span class="nav-icon">📄</span> My Documents</a></li>
+      </ul>
+    </nav>
+
+    <main class="page-content" id="main-content">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="wireframe-SCR-004-patient-dashboard.html" id="link-dashboard">Dashboard</a>
+        <span class="sep" aria-hidden="true">›</span>
+        <span class="current" aria-current="page">Intake form</span>
+      </nav>
+
+      <!-- Progress steps -->
+      <div class="steps-hint" aria-label="Intake progress: Step 1 of 3">
+        <div class="step-dot">1</div>
+        <div style="display:flex;flex-direction:column;"><span style="font-size:var(--text-body-sm);font-weight:600;">Choose method</span><span class="step-label">Current</span></div>
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:var(--neutral-300);">2</div>
+        <span class="step-label">Complete intake</span>
+        <div class="step-line"></div>
+        <div class="step-dot" style="background:var(--neutral-300);">3</div>
+        <span class="step-label">Review & confirm</span>
+      </div>
+
+      <div class="intro-block">
+        <h1 class="page-title">How would you like to complete your intake?</h1>
+        <p style="margin-top:var(--space-3); color:var(--neutral-500);">
+          Your answers help your care team prepare for your appointment. You can switch between methods at any time — your progress is saved automatically.
+        </p>
+      </div>
+
+      <div class="method-grid">
+        <!-- AI-Assisted option -->
+        <a href="wireframe-SCR-006-ai-intake-chat.html" class="method-card" id="btn-ai-intake"
+           aria-label="Choose AI-assisted intake — conversational chat, approximately 5 minutes">
+          <span class="recommended-badge">✨ AI-Assisted</span>
+          <div class="method-icon method-ai" aria-hidden="true">💬</div>
+          <div class="method-title">Conversational chat</div>
+          <p class="method-desc">Answer questions naturally through a guided chat. Our AI asks follow-up questions to capture details accurately and completely.</p>
+          <span class="method-duration">⏱ ~5 minutes</span>
+        </a>
+
+        <!-- Manual option -->
+        <a href="wireframe-SCR-007-manual-intake.html" class="method-card" id="btn-manual"
+           aria-label="Choose manual intake form — structured fields, approximately 8 minutes">
+          <div class="method-icon method-manual" aria-hidden="true">📝</div>
+          <div class="method-title">Manual form</div>
+          <p class="method-desc">Fill out a structured form at your own pace. All required fields are clearly labelled with validation to guide you.</p>
+          <span class="method-duration">⏱ ~8 minutes</span>
+        </a>
+      </div>
+
+      <div class="alert alert-info" style="max-width:720px; margin-top: var(--space-6);">
+        <span>ℹ</span>
+        <span>All information is saved automatically every 60 seconds and stored securely per HIPAA requirements.</span>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="wireframe-annotation">
+  <span class="scr-id">SCR-005</span>
+  <span>Intake Method Selection</span>
+  <span class="priority-badge">P0</span>
+  <span class="uxr-tags">UXR: 001, 002, 003, 004, 201, 301, 402</span>
+</div>
+
+</body>
+</html>

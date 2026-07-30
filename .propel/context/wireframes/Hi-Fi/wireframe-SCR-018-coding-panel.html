@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCR-018 — Medical Coding Panel | PropelIQ Health</title>
+<link rel="stylesheet" href="wireframe-shared.css">
+<style>
+  .coding-table { width: 100%; border-collapse: collapse; }
+  .coding-table th { background: var(--neutral-50); font-size: var(--text-body-sm); font-weight: 600; color: var(--neutral-500); text-transform: uppercase; letter-spacing: 0.05em; padding: var(--space-3) var(--space-4); border-bottom: 2px solid var(--neutral-200); text-align: left; white-space: nowrap; }
+  .coding-table td { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--neutral-200); vertical-align: middle; font-size: var(--text-body-md); }
+  .coding-table tr:hover td { background: var(--neutral-50); }
+  .coding-table tr:last-child td { border-bottom: none; }
+  .code-cell { font-family: var(--font-mono); font-weight: 700; font-size: var(--text-body-sm); color: var(--color-navy-600); }
+  .confidence-bar { display: flex; align-items: center; gap: var(--space-2); }
+  .conf-track { width: 80px; height: 6px; background: var(--neutral-200); border-radius: var(--radius-full); overflow: hidden; }
+  .conf-fill { height: 100%; border-radius: var(--radius-full); }
+  .conf-high { background: var(--color-success); }
+  .conf-mid { background: var(--color-warning); }
+  .conf-low { background: var(--color-error); }
+  .row-action-group { display: flex; gap: var(--space-2); }
+  .needs-review-row td { background: #FFFBEB; }
+  .evidence-drawer { position: fixed; right: 0; top: 0; height: 100vh; width: 420px; background: white; box-shadow: var(--shadow-4); border-left: 1px solid var(--neutral-200); z-index: 40; display: flex; flex-direction: column; }
+  .evidence-header { padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--neutral-200); display: flex; align-items: center; gap: var(--space-3); background: var(--color-ai-bg); }
+  .evidence-body { flex: 1; overflow-y: auto; padding: var(--space-5); }
+  .evidence-quote { background: var(--neutral-50); border-left: 4px solid var(--color-ai); border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: var(--space-3) var(--space-4); margin-bottom: var(--space-4); font-size: var(--text-body-sm); line-height: 1.6; }
+  .evidence-source { font-size: var(--text-caption); color: var(--neutral-400); margin-top: var(--space-2); font-style: italic; }
+  .finalise-bar { padding: var(--space-4) var(--space-6); background: var(--neutral-50); border-top: 1px solid var(--neutral-200); display: flex; justify-content: flex-end; gap: var(--space-3); }
+</style>
+</head>
+<body>
+
+<!-- Navigation Map
+| Element          | Action | Target Screen                                    |
+|------------------|--------|--------------------------------------------------|
+| #btn-back        | click  | SCR-016 (360° Patient View)                      |
+| #btn-view-source | click  | Opens evidence drawer (SCR-018 overlay)          |
+| #btn-finalise    | click  | Finalise confirm dialog (stays SCR-018)          |
+-->
+
+<div class="app-shell">
+  <header class="topbar" role="banner">
+    <div class="topbar-logo"><div class="logo-icon">P</div>PropelIQ Health</div>
+    <div class="topbar-spacer"></div>
+    <span class="topbar-role-badge" style="background:var(--color-success-bg);color:var(--color-success);">Staff</span>
+    <div class="topbar-avatar" tabindex="0">RP</div>
+    <button class="topbar-logout">Sign out</button>
+  </header>
+
+  <div class="app-main">
+    <nav class="sidebar" aria-label="Staff navigation">
+      <div class="sidebar-section-label">Staff Portal</div>
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-011-staff-dashboard.html"><span class="nav-icon">⊞</span> Dashboard</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-014-queue-view.html"><span class="nav-icon">📋</span> Queue</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-016-patient-360.html"><span class="nav-icon">👤</span> Patient View</a></li>
+        <li class="sidebar-nav-item active"><a href="#" aria-current="page"><span class="nav-icon">🏥</span> Medical Coding</a></li>
+      </ul>
+    </nav>
+
+    <main class="page-content" id="main-content" style="padding-right: 440px;">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="wireframe-SCR-014-queue-view.html">Queue</a>
+        <span class="sep">›</span>
+        <a href="wireframe-SCR-016-patient-360.html" id="btn-back">Jane Smith — 360° View</a>
+        <span class="sep">›</span>
+        <span class="current" aria-current="page">Medical coding</span>
+      </nav>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Medical coding — Jane Smith</h1>
+          <p class="page-subtitle">AI-suggested ICD-10 and CPT codes based on clinical documents. Review each code before finalising.</p>
+        </div>
+        <span class="ai-badge" aria-label="Codes AI-suggested using Llama 3.2 from uploaded documents">🤖 AI-suggested</span>
+      </div>
+
+      <div class="alert alert-info" style="margin-bottom:var(--space-4);" role="note">
+        <span>ℹ</span>
+        <span>Codes are AI-suggested based on the patient's intake, documents, and 360° record. All codes require clinician acceptance before submission.</span>
+      </div>
+
+      <!-- ICD-10 Codes Table -->
+      <h2 style="font-size:var(--text-h4);margin-bottom:var(--space-3);">ICD-10 Diagnosis codes</h2>
+      <div class="table-wrapper" role="region" aria-label="ICD-10 diagnosis codes" tabindex="0">
+        <table class="coding-table">
+          <thead>
+            <tr>
+              <th scope="col">Code</th>
+              <th scope="col">Description</th>
+              <th scope="col">AI confidence</th>
+              <th scope="col">Status</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="code-cell">I10</span></td>
+              <td>Essential (primary) hypertension</td>
+              <td>
+                <div class="confidence-bar">
+                  <div class="conf-track" aria-hidden="true"><div class="conf-fill conf-high" style="width:94%;"></div></div>
+                  <span style="font-family:var(--font-mono);font-size:var(--text-body-sm);">94%</span>
+                </div>
+              </td>
+              <td><span class="badge badge-success" aria-label="Status: Accepted">Accepted</span></td>
+              <td>
+                <div class="row-action-group">
+                  <button class="btn btn-ghost btn-sm" id="btn-view-source" type="button" aria-label="View source evidence for I10">View source</button>
+                  <button class="btn btn-ghost btn-sm" type="button" aria-label="Edit code I10">Edit</button>
+                </div>
+              </td>
+            </tr>
+            <tr class="needs-review-row">
+              <td><span class="code-cell">J18.9</span></td>
+              <td>Pneumonia, unspecified organism</td>
+              <td>
+                <div class="confidence-bar">
+                  <div class="conf-track" aria-hidden="true"><div class="conf-fill conf-mid" style="width:61%;"></div></div>
+                  <span style="font-family:var(--font-mono);font-size:var(--text-body-sm);">61%</span>
+                </div>
+              </td>
+              <td><span class="badge badge-warning" aria-label="Status: Needs review">Needs review</span></td>
+              <td>
+                <div class="row-action-group">
+                  <button class="btn btn-primary btn-sm" type="button" aria-label="Accept code J18.9">Accept</button>
+                  <button class="btn btn-ghost btn-sm" type="button" aria-label="View source evidence for J18.9">Source</button>
+                  <button class="btn btn-ghost btn-sm" type="button" aria-label="Reject code J18.9" style="color:var(--color-error);">Reject</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="code-cell">E78.5</span></td>
+              <td>Hyperlipidaemia, unspecified</td>
+              <td>
+                <div class="confidence-bar">
+                  <div class="conf-track" aria-hidden="true"><div class="conf-fill conf-high" style="width:88%;"></div></div>
+                  <span style="font-family:var(--font-mono);font-size:var(--text-body-sm);">88%</span>
+                </div>
+              </td>
+              <td><span class="badge badge-success" aria-label="Status: Accepted">Accepted</span></td>
+              <td>
+                <div class="row-action-group">
+                  <button class="btn btn-ghost btn-sm" type="button" aria-label="View source evidence for E78.5">View source</button>
+                  <button class="btn btn-ghost btn-sm" type="button" aria-label="Edit code E78.5">Edit</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- CPT Codes -->
+      <h2 style="font-size:var(--text-h4);margin-top:var(--space-8);margin-bottom:var(--space-3);">CPT Procedure codes</h2>
+      <div class="table-wrapper" role="region" aria-label="CPT procedure codes" tabindex="0">
+        <table class="coding-table">
+          <thead>
+            <tr>
+              <th scope="col">Code</th>
+              <th scope="col">Description</th>
+              <th scope="col">AI confidence</th>
+              <th scope="col">Status</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="code-cell">99213</span></td>
+              <td>Office outpatient visit, 15 min (established patient)</td>
+              <td>
+                <div class="confidence-bar">
+                  <div class="conf-track" aria-hidden="true"><div class="conf-fill conf-high" style="width:92%;"></div></div>
+                  <span style="font-family:var(--font-mono);font-size:var(--text-body-sm);">92%</span>
+                </div>
+              </td>
+              <td><span class="badge badge-success" aria-label="Status: Accepted">Accepted</span></td>
+              <td>
+                <div class="row-action-group">
+                  <button class="btn btn-ghost btn-sm" type="button" aria-label="View source evidence for 99213">View source</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Finalise -->
+      <div class="finalise-bar" style="margin-top:var(--space-8); border-radius:var(--radius-lg);">
+        <a href="wireframe-SCR-016-patient-360.html" class="btn btn-secondary btn-md">← Back to patient view</a>
+        <button class="btn btn-primary btn-lg" id="btn-finalise" type="button">
+          Finalise &amp; submit codes →
+        </button>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Source Evidence Drawer (open state) -->
+<div class="evidence-drawer" role="complementary" aria-label="Source evidence for code I10" aria-modal="false">
+  <div class="evidence-header">
+    <span class="ai-badge" aria-hidden="true">🤖</span>
+    <div>
+      <div style="font-weight:700; font-size:var(--text-body-lg);">Evidence: I10 — Hypertension</div>
+      <div style="font-size:var(--text-body-sm); color:var(--neutral-500);">Confidence: 94%</div>
+    </div>
+    <button class="btn btn-ghost btn-sm" style="margin-left:auto;" type="button" aria-label="Close evidence drawer">×</button>
+  </div>
+  <div class="evidence-body">
+    <h4 style="margin-bottom:var(--space-3);">Extracted passages</h4>
+
+    <div class="evidence-quote">
+      "Patient has a documented history of <strong>essential hypertension</strong> since 2019. Current BP reading: 138/86 mmHg."
+      <div class="evidence-source">📄 Referral_DrPatel_2026-02-12.pdf · Page 1, para. 2</div>
+    </div>
+
+    <div class="evidence-quote">
+      "Current medications include Atorvastatin 20mg and <strong>Amlodipine 5mg</strong> (antihypertensive)."
+      <div class="evidence-source">📄 BloodTest_Results_April2026.pdf · Page 2, medication reconciliation</div>
+    </div>
+
+    <div style="padding:var(--space-4); background:var(--neutral-50); border-radius:var(--radius-md);">
+      <div style="font-size:var(--text-body-sm); font-weight:600; color:var(--neutral-600); margin-bottom:var(--space-2);">AI reasoning</div>
+      <p style="font-size:var(--text-body-sm); color:var(--neutral-600); line-height:1.6;">
+        ICD-10 I10 maps to "Essential (primary) hypertension." Patient's history, current antihypertensive medication, and BP reading consistently support this code. Confidence weighted at 94%.
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="wireframe-annotation">
+  <span class="scr-id">SCR-018</span>
+  <span>Medical Coding Panel</span>
+  <span class="priority-badge">P1</span>
+  <span class="uxr-tags">UXR: 104, 201, 203, 403, 501, 502, 603</span>
+</div>
+
+</body>
+</html>

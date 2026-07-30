@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCR-013 — Patient Search / Create | PropelIQ Health</title>
+<link rel="stylesheet" href="wireframe-shared.css">
+<style>
+  .search-bar { display: flex; gap: var(--space-3); margin-bottom: var(--space-6); }
+  .search-input { flex: 1; height: 48px; padding: 0 var(--space-4); border: 2px solid var(--neutral-200); border-radius: var(--radius-lg); font-size: var(--text-body-md); transition: all var(--transition-micro); }
+  .search-input:focus { outline: none; border-color: var(--color-teal-500); box-shadow: var(--shadow-focus); }
+  .result-card { border: 1px solid var(--neutral-200); border-radius: var(--radius-lg); padding: var(--space-4) var(--space-5); display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-3); background: white; cursor: pointer; transition: all var(--transition-micro); text-decoration: none; color: inherit; }
+  .result-card:hover { border-color: var(--color-teal-500); box-shadow: var(--shadow-2); }
+  .result-card:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+  .result-avatar { width: 48px; height: 48px; background: var(--color-navy-600); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: var(--text-h4); flex-shrink: 0; }
+  .result-meta { font-size: var(--text-body-sm); color: var(--neutral-500); margin-top: var(--space-1); }
+  .divider-or { display: flex; align-items: center; gap: var(--space-4); margin: var(--space-8) 0; }
+  .divider-or::before, .divider-or::after { content: ''; flex: 1; height: 1px; background: var(--neutral-200); }
+  .divider-text { font-size: var(--text-body-sm); font-weight: 600; color: var(--neutral-400); }
+  .new-patient-form { background: var(--neutral-50); border: 2px dashed var(--neutral-300); border-radius: var(--radius-lg); padding: var(--space-6); }
+  .search-hint { font-size: var(--text-body-sm); color: var(--neutral-400); margin-top: var(--space-2); }
+  .match-highlight { background: var(--color-teal-100); border-radius: 2px; font-weight: 700; color: var(--color-teal-500); }
+</style>
+</head>
+<body>
+
+<!-- Navigation Map
+| Element          | Action | Target Screen                |
+|------------------|--------|------------------------------|
+| #btn-select-pt   | click  | SCR-012 (Walk-In Booking)    |
+| #btn-create-pt   | click  | SCR-012 (Walk-In Booking)    |
+| #btn-cancel      | click  | SCR-011 (Staff Dashboard)    |
+-->
+
+<div class="app-shell">
+  <header class="topbar" role="banner">
+    <div class="topbar-logo"><div class="logo-icon">P</div>PropelIQ Health</div>
+    <div class="topbar-spacer"></div>
+    <span class="topbar-role-badge" style="background:var(--color-success-bg);color:var(--color-success);">Staff</span>
+    <div class="topbar-avatar" tabindex="0">RP</div>
+    <button class="topbar-logout">Sign out</button>
+  </header>
+
+  <div class="app-main">
+    <nav class="sidebar" aria-label="Staff navigation">
+      <div class="sidebar-section-label">Staff Portal</div>
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-011-staff-dashboard.html"><span class="nav-icon">⊞</span> Dashboard</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-014-queue-view.html"><span class="nav-icon">📋</span> Queue</a></li>
+        <li class="sidebar-nav-item active"><a href="#" aria-current="page"><span class="nav-icon">🔍</span> Patients</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-016-patient-360.html"><span class="nav-icon">👤</span> Patient View</a></li>
+      </ul>
+    </nav>
+
+    <main class="page-content" id="main-content" style="max-width: 780px;">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="wireframe-SCR-011-staff-dashboard.html">Dashboard</a>
+        <span class="sep">›</span>
+        <span class="current" aria-current="page">Patient search</span>
+      </nav>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Find or create a patient</h1>
+          <p class="page-subtitle">Search by name, date of birth, email, or MRN to find an existing patient record.</p>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="search-bar" role="search">
+        <input type="search" class="search-input" id="patient-search-input" name="query"
+               value="Smith" autocomplete="off" aria-label="Search patients"
+               aria-controls="search-results" aria-describedby="search-hint">
+        <button class="btn btn-primary btn-md" type="button" aria-label="Search">
+          Search
+        </button>
+      </div>
+      <p class="search-hint" id="search-hint">Showing 3 results for "<strong>Smith</strong>" — 2 exact matches, 1 partial</p>
+
+      <!-- Search results -->
+      <div id="search-results" role="region" aria-label="Search results" aria-live="polite">
+        <a href="wireframe-SCR-012-walkin-booking.html" class="result-card" id="btn-select-pt"
+           aria-label="Select Jane Smith, DOB 04/04/1990, MRN-20244-A">
+          <div class="result-avatar" aria-hidden="true">JS</div>
+          <div style="flex:1;">
+            <div style="font-weight:700; font-size:var(--text-body-lg);">Jane <span class="match-highlight">Smith</span></div>
+            <div class="result-meta">DOB: 04/04/1990 · MRN-20244-A · 🟢 BlueCross Shield</div>
+            <div class="result-meta">Last visit: 12 Feb 2026 — General consultation</div>
+          </div>
+          <span class="badge badge-success">Exact match</span>
+        </a>
+
+        <a href="wireframe-SCR-012-walkin-booking.html" class="result-card"
+           aria-label="Select Robert Smith, DOB 15/07/1965, MRN-10381-B">
+          <div class="result-avatar" aria-hidden="true">RS</div>
+          <div style="flex:1;">
+            <div style="font-weight:700; font-size:var(--text-body-lg);">Robert <span class="match-highlight">Smith</span></div>
+            <div class="result-meta">DOB: 15/07/1965 · MRN-10381-B · 🔵 Medicare</div>
+            <div class="result-meta">Last visit: 5 Jan 2026 — Blood test follow-up</div>
+          </div>
+          <span class="badge badge-success">Exact match</span>
+        </a>
+
+        <a href="wireframe-SCR-012-walkin-booking.html" class="result-card"
+           aria-label="Select Smithson, Emily, DOB 22/11/2001, MRN-30598-C">
+          <div class="result-avatar" aria-hidden="true">ES</div>
+          <div style="flex:1;">
+            <div style="font-weight:700; font-size:var(--text-body-lg);">Emily <span class="match-highlight">Smith</span>son</div>
+            <div class="result-meta">DOB: 22/11/2001 · MRN-30598-C · 🟡 Uninsured</div>
+            <div class="result-meta">Last visit: 30 Oct 2025 — Flu vaccination</div>
+          </div>
+          <span class="badge badge-neutral">Partial</span>
+        </a>
+      </div>
+
+      <!-- Divider -->
+      <div class="divider-or" role="separator">
+        <span class="divider-text">Patient not found?</span>
+      </div>
+
+      <!-- Create new patient form -->
+      <div class="new-patient-form" role="region" aria-labelledby="new-patient-heading">
+        <h2 id="new-patient-heading" style="font-size:var(--text-h4); margin-bottom:var(--space-4);">Create a new patient record</h2>
+        <form novalidate>
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="new-first-name">First name <span class="required">*</span></label>
+              <input type="text" id="new-first-name" name="firstName" aria-required="true">
+            </div>
+            <div class="form-group">
+              <label for="new-last-name">Last name <span class="required">*</span></label>
+              <input type="text" id="new-last-name" name="lastName" aria-required="true">
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="new-dob">Date of birth <span class="required">*</span></label>
+              <input type="text" id="new-dob" name="dob" placeholder="DD/MM/YYYY" aria-required="true">
+            </div>
+            <div class="form-group">
+              <label for="new-email">Email address <span class="required">*</span></label>
+              <input type="email" id="new-email" name="email" placeholder="patient@email.com" aria-required="true">
+            </div>
+          </div>
+          <div class="flex justify-end mt-4">
+            <a href="wireframe-SCR-012-walkin-booking.html" class="btn btn-primary btn-md" id="btn-create-pt">
+              Create & proceed to booking →
+            </a>
+          </div>
+        </form>
+      </div>
+
+      <div class="flex mt-6">
+        <a href="wireframe-SCR-011-staff-dashboard.html" class="btn btn-ghost btn-md" id="btn-cancel">← Back to dashboard</a>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="wireframe-annotation">
+  <span class="scr-id">SCR-013</span>
+  <span>Patient Search / Create</span>
+  <span class="priority-badge">P0</span>
+  <span class="uxr-tags">UXR: 201, 204, 301, 402, 501, 601, 604</span>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCR-003 — Email Verification | PropelIQ Health</title>
+<link rel="stylesheet" href="wireframe-shared.css">
+<style>
+  body { background: var(--neutral-50); display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .auth-container { width: 100%; max-width: 440px; padding: var(--space-4); }
+  .auth-logo { text-align: center; margin-bottom: var(--space-8); }
+  .auth-logo .logo-mark { width: 56px; height: 56px; background: var(--color-teal-500); border-radius: var(--radius-lg); display: inline-flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 22px; margin-bottom: var(--space-3); }
+  .auth-logo h1 { font-size: var(--text-h3); color: var(--color-navy-600); margin: 0; }
+  .auth-card { background: white; border: 1px solid var(--neutral-200); border-radius: var(--radius-xl); padding: var(--space-8); box-shadow: var(--shadow-2); text-align: center; }
+  .email-icon { width: 72px; height: 72px; background: var(--color-teal-100); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-6); font-size: 32px; }
+  .auth-card h2 { font-size: var(--text-h3); margin-bottom: var(--space-3); }
+  .auth-card p { font-size: var(--text-body-md); color: var(--neutral-500); line-height: 1.6; }
+  .email-highlight { font-weight: 600; color: var(--neutral-800); }
+  .actions { margin-top: var(--space-8); display: flex; flex-direction: column; gap: var(--space-3); }
+  .resend-text { font-size: var(--text-body-sm); color: var(--neutral-400); margin-top: var(--space-4); }
+</style>
+</head>
+<body>
+
+<!-- Navigation Map
+| Element           | Action | Target Screen              |
+|-------------------|--------|----------------------------|
+| #btn-resend       | click  | SCR-003 (same, toast shown)|
+| #link-back-login  | click  | SCR-001 (Login)            |
+-->
+
+<div class="auth-container">
+  <div class="auth-logo">
+    <div class="logo-mark">P</div>
+    <h1>PropelIQ Health</h1>
+  </div>
+
+  <div class="auth-card">
+    <div class="email-icon" aria-hidden="true">✉</div>
+    <h2>Check your email</h2>
+    <p>
+      We sent a verification link to<br>
+      <span class="email-highlight">jane.smith@email.com</span>
+    </p>
+    <p style="margin-top: var(--space-4);">
+      Click the link in your email to verify your account. The link expires in 24 hours.
+    </p>
+
+    <div class="alert alert-info" style="text-align: left; margin-top: var(--space-6);">
+      <span>ℹ</span>
+      <span>Check your spam or junk folder if you don't see the email within a few minutes.</span>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary btn-md" id="btn-resend" type="button">
+        Resend verification email
+      </button>
+      <a href="wireframe-SCR-001-login.html" class="btn btn-ghost btn-md" id="link-back-login">
+        ← Back to sign in
+      </a>
+    </div>
+
+    <p class="resend-text">Didn't receive it? You can resend after 60 seconds.</p>
+  </div>
+
+  <div class="wireframe-annotation" style="margin-top: var(--space-4); border-radius: var(--radius-md);">
+    <span class="scr-id">SCR-003</span>
+    <span>Email Verification</span>
+    <span class="priority-badge">P0</span>
+    <span class="uxr-tags">UXR: 201, 202, 501, 503</span>
+  </div>
+</div>
+
+</body>
+</html>

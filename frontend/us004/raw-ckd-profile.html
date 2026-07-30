@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Raw CKD Profile - Before Analysis</title>
+  <link rel="stylesheet" href="./raw-ckd-profile.css">
+</head>
+<body>
+  <header class="page-header">
+    <h1>Patient CKD Profile</h1>
+    <p class="subtitle">Raw clinical view shown before AI analysis</p>
+    <p class="safety-disclaimer" data-testid="prototype-disclaimer">
+      Prototype only. Synthetic data only. Not clinical decision support and not for patient care decisions.
+    </p>
+  </header>
+
+  <main class="layout" aria-label="Raw CKD profile workspace">
+    <section class="card" aria-labelledby="search-title">
+      <h2 id="search-title">Patient Search</h2>
+      <form id="search-form" class="search-form" novalidate>
+        <label for="patient-query">Search by ID or name</label>
+        <div class="search-row">
+          <input id="patient-query" name="patientQuery" type="text" value="John" autocomplete="off" required>
+          <button type="submit" id="search-button">Search</button>
+        </div>
+      </form>
+      <p id="search-status" class="status" role="status" aria-live="polite">Enter a query to search for a patient.</p>
+      <ul id="search-results" class="results" aria-label="Patient search results"></ul>
+    </section>
+
+    <section class="card" aria-labelledby="profile-title">
+      <h2 id="profile-title">Raw CKD Profile</h2>
+      <div id="profile-empty" class="empty-state">Select a patient to view raw CKD values.</div>
+      <dl id="profile-fields" class="profile-grid hidden" data-testid="raw-ckd-values">
+        <div>
+          <dt>Patient ID</dt>
+          <dd id="field-patient-id">-</dd>
+        </div>
+        <div>
+          <dt>Name</dt>
+          <dd id="field-name">-</dd>
+        </div>
+        <div>
+          <dt>CKD Stage</dt>
+          <dd id="field-ckd-stage">-</dd>
+        </div>
+        <div>
+          <dt>eGFR Current</dt>
+          <dd id="field-egfr-current">-</dd>
+        </div>
+        <div>
+          <dt>eGFR Previous</dt>
+          <dd id="field-egfr-previous">-</dd>
+        </div>
+        <div>
+          <dt>UACR Status</dt>
+          <dd id="field-uacr-status">-</dd>
+        </div>
+        <div>
+          <dt>Last Nephrology Visit</dt>
+          <dd id="field-last-visit">-</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="card" aria-labelledby="recommendation-title">
+      <h2 id="recommendation-title">Recommendation Panel</h2>
+      <p id="recommendation-state" class="pill" data-testid="recommendation-state">Not analyzed yet</p>
+      <p class="note">No AI output is shown until analysis is explicitly triggered.</p>
+      <button id="analyze-button" type="button" disabled aria-disabled="true" title="Analysis trigger is implemented in US-005">
+        Analyze Patient
+      </button>
+    </section>
+  </main>
+
+  <script type="module" src="./raw-ckd-profile.js"></script>
+</body>
+</html>

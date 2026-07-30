@@ -1,0 +1,8 @@
+{
+  "name": "dir-setup",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "node -e \"const fs=require('fs');['d:/kanini/PropelAssignment/.propel/context/package.json','d:/kanini/PropelAssignment/.propel/context/package-lock.json','d:/kanini/PropelAssignment/create_dirs.py','d:/kanini/PropelAssignment/setup_dirs.bat'].forEach(f=>{try{fs.unlinkSync(f);console.log('Deleted '+f)}catch(e){console.log('Skip '+f)}})\""
+  }
+}

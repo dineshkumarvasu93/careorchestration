@@ -1,0 +1,127 @@
+:root {
+  --bg: #f4efe6;
+  --panel: #fff9f0;
+  --text: #162f2f;
+  --accent: #bd5d38;
+  --accent-soft: #ebd8ca;
+  --line: #d8c1ad;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+  background: radial-gradient(circle at 10% 10%, #fff8ec 0%, var(--bg) 55%, #efe4d7 100%);
+  color: var(--text);
+}
+
+.page-head {
+  padding: 2rem 1.25rem 1rem;
+}
+
+.page-head h1 {
+  margin: 0;
+  font-size: clamp(1.8rem, 3.6vw, 2.7rem);
+  letter-spacing: 0.02em;
+}
+
+.page-head p {
+  margin: 0.5rem 0 0;
+  max-width: 60ch;
+}
+
+.layout {
+  display: grid;
+  gap: 1rem;
+  padding: 0 1.25rem 1.5rem;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: 0 8px 24px rgba(56, 33, 18, 0.06);
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.6rem 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(120deg, #9f4b2b, var(--accent));
+}
+
+button:hover {
+  filter: brightness(1.04);
+}
+
+.widget-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.widget {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  padding: 0.8rem;
+}
+
+.widget-label {
+  display: block;
+  font-size: 0.88rem;
+  color: #4f5656;
+}
+
+.widget-value {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.7rem;
+  margin: 0;
+}
+
+.detail-grid div {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.65rem;
+}
+
+.detail-grid dt {
+  font-size: 0.82rem;
+  color: #4f5656;
+}
+
+.detail-grid dd {
+  margin: 0.2rem 0 0;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .controls {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

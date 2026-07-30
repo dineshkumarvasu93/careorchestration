@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCR-015 — Clinical Documents Upload | PropelIQ Health</title>
+<link rel="stylesheet" href="wireframe-shared.css">
+<style>
+  .doc-list { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-6); }
+  .doc-card { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) var(--space-5); background: white; border: 1px solid var(--neutral-200); border-radius: var(--radius-lg); transition: all var(--transition-micro); }
+  .doc-card:hover { box-shadow: var(--shadow-2); }
+  .doc-icon { width: 44px; height: 44px; background: var(--color-info-bg); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .doc-icon.failed { background: var(--color-error-bg); }
+  .doc-icon.processing { background: var(--color-warning-bg); }
+  .doc-icon.extracted { background: var(--color-success-bg); }
+  .doc-info { flex: 1; min-width: 0; }
+  .doc-name { font-weight: 600; color: var(--neutral-800); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .doc-meta { font-size: var(--text-body-sm); color: var(--neutral-500); margin-top: 2px; }
+  .extraction-preview { margin-top: var(--space-2); padding: var(--space-2) var(--space-3); background: var(--color-teal-100); border-radius: var(--radius-sm); font-size: var(--text-caption); color: var(--color-teal-500); }
+  .upload-zone { border: 2px dashed var(--color-teal-500); border-radius: var(--radius-xl); padding: var(--space-12) var(--space-8); text-align: center; background: var(--color-teal-100); cursor: pointer; transition: all var(--transition-micro); }
+  .upload-zone:hover, .upload-zone:focus-within { background: #D1FAF7; border-color: var(--color-teal-400); }
+  .upload-icon { font-size: 48px; margin-bottom: var(--space-3); }
+  .upload-headline { font-size: var(--text-h4); font-weight: 700; color: var(--color-navy-600); margin-bottom: var(--space-2); }
+  .upload-hint { font-size: var(--text-body-sm); color: var(--neutral-500); }
+  .upload-types { margin-top: var(--space-3); display: flex; gap: var(--space-2); justify-content: center; flex-wrap: wrap; }
+  .type-tag { padding: 2px 10px; border-radius: var(--radius-full); background: white; border: 1px solid var(--neutral-200); font-size: var(--text-caption); color: var(--neutral-500); }
+</style>
+</head>
+<body>
+
+<!-- Navigation Map
+| Element          | Action | Target Screen               |
+|------------------|--------|-----------------------------|
+| #btn-view-360    | click  | SCR-016 (360° Patient View) |
+| #btn-dashboard   | click  | SCR-004 (Patient Dashboard) |
+-->
+
+<div class="app-shell">
+  <header class="topbar" role="banner">
+    <div class="topbar-logo"><div class="logo-icon">P</div>PropelIQ Health</div>
+    <div class="topbar-spacer"></div>
+    <span class="topbar-role-badge">Patient</span>
+    <div class="topbar-avatar" tabindex="0">JS</div>
+    <button class="topbar-logout">Sign out</button>
+  </header>
+
+  <div class="app-main">
+    <nav class="sidebar" aria-label="Patient navigation">
+      <div class="sidebar-section-label">Patient Portal</div>
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-004-patient-dashboard.html"><span class="nav-icon">⊞</span> Dashboard</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-005-intake-method.html"><span class="nav-icon">📋</span> My Intake</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-008-booking-calendar.html"><span class="nav-icon">📅</span> Book Appointment</a></li>
+        <li class="sidebar-nav-item active"><a href="#" aria-current="page"><span class="nav-icon">📄</span> My Documents</a></li>
+      </ul>
+    </nav>
+
+    <main class="page-content" id="main-content">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="wireframe-SCR-004-patient-dashboard.html" id="btn-dashboard">Dashboard</a>
+        <span class="sep">›</span>
+        <span class="current" aria-current="page">My documents</span>
+      </nav>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Clinical documents</h1>
+          <p class="page-subtitle">Upload your medical history, referral letters, lab results, and other documents. Our AI will extract relevant information automatically.</p>
+        </div>
+      </div>
+
+      <!-- Upload zone -->
+      <div class="upload-zone" role="button" tabindex="0" aria-label="Drag and drop files here or click to browse files"
+           onkeydown="if(event.key==='Enter'||event.key===' ')this.click()">
+        <div class="upload-icon" aria-hidden="true">📁</div>
+        <div class="upload-headline">Drag & drop files here</div>
+        <p class="upload-hint">or <strong style="color:var(--color-teal-500);">click to browse</strong> from your device</p>
+        <div class="upload-types" aria-label="Accepted file types">
+          <span class="type-tag">PDF</span>
+          <span class="type-tag">JPG / PNG</span>
+          <span class="type-tag">DOCX</span>
+          <span class="type-tag">DICOM</span>
+          <span class="type-tag">Up to 25 MB</span>
+        </div>
+        <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.docx,.dcm" style="display:none;" id="file-input" aria-hidden="true" tabindex="-1">
+      </div>
+
+      <!-- AI extraction info -->
+      <div class="alert alert-info" style="margin-top: var(--space-4);" role="note">
+        <span>🤖</span>
+        <div>
+          <strong>AI data extraction:</strong> Uploaded documents are processed locally using Llama 3.2 — your data never leaves the clinic's network. Extracted information is flagged for clinical review before it is applied to your record.
+        </div>
+      </div>
+
+      <!-- Document list -->
+      <h2 style="font-size:var(--text-h4); margin-top:var(--space-8); margin-bottom:var(--space-4);">Uploaded documents (3)</h2>
+      <div class="doc-list" role="list" aria-label="Uploaded documents">
+
+        <!-- Extracted state -->
+        <div class="doc-card" role="listitem">
+          <div class="doc-icon extracted" aria-hidden="true">📄</div>
+          <div class="doc-info">
+            <div class="doc-name">Referral_DrPatel_2026-02-12.pdf</div>
+            <div class="doc-meta">Uploaded 12 Feb 2026 · 1.2 MB · PDF</div>
+            <div class="extraction-preview" aria-label="Extracted data preview">
+              🤖 Extracted: Referring physician, diagnosis code J18.9, medication list (3 items)
+            </div>
+          </div>
+          <span class="badge badge-success" aria-label="AI extraction completed">Extracted</span>
+          <button class="btn btn-ghost btn-sm" type="button" aria-label="View Referral_DrPatel_2026-02-12.pdf">View</button>
+        </div>
+
+        <!-- Processing state -->
+        <div class="doc-card" role="listitem">
+          <div class="doc-icon processing" aria-hidden="true">📄</div>
+          <div class="doc-info">
+            <div class="doc-name">BloodTest_Results_April2026.pdf</div>
+            <div class="doc-meta">Uploaded just now · 0.8 MB · PDF</div>
+            <div class="progress-bar-track" style="margin-top:var(--space-2);">
+              <div class="progress-bar-fill" style="width:65%;" role="progressbar" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100" aria-label="Processing 65%"></div>
+            </div>
+          </div>
+          <span class="badge badge-warning" aria-label="Processing in progress">Processing…</span>
+          <button class="btn btn-ghost btn-sm" type="button" aria-label="Cancel processing of BloodTest_Results_April2026.pdf" disabled>Cancel</button>
+        </div>
+
+        <!-- Failed state -->
+        <div class="doc-card" role="listitem">
+          <div class="doc-icon failed" aria-hidden="true">📄</div>
+          <div class="doc-info">
+            <div class="doc-name">OldXray_scan.jpg</div>
+            <div class="doc-meta">Uploaded 5 Jan 2026 · 3.4 MB · JPG</div>
+            <div style="margin-top:var(--space-1);font-size:var(--text-body-sm);color:var(--color-error);">
+              ⚠ Extraction failed — image quality too low. Please upload a clearer scan.
+            </div>
+          </div>
+          <span class="badge badge-error" aria-label="Extraction failed">Failed</span>
+          <button class="btn btn-ghost btn-sm" type="button" aria-label="Retry extraction for OldXray_scan.jpg">↻ Retry</button>
+        </div>
+      </div>
+
+      <!-- Staff action (conditional) -->
+      <div style="margin-top: var(--space-8);">
+        <a href="wireframe-SCR-016-patient-360.html" class="btn btn-secondary btn-md" id="btn-view-360">
+          View 360° patient profile →
+        </a>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="wireframe-annotation">
+  <span class="scr-id">SCR-015</span>
+  <span>Clinical Documents Upload</span>
+  <span class="priority-badge">P1</span>
+  <span class="uxr-tags">UXR: 103, 201, 203, 301, 501, 502, 604</span>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCR-004 — Patient Dashboard | PropelIQ Health</title>
+<link rel="stylesheet" href="wireframe-shared.css">
+<style>
+  .status-card { display: flex; align-items: flex-start; gap: var(--space-4); }
+  .status-icon { width: 44px; height: 44px; border-radius: var(--radius-md); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .status-icon.appt { background: var(--color-info-bg); }
+  .status-icon.intake { background: var(--color-warning-bg); }
+  .status-icon.insurance { background: var(--color-success-bg); }
+  .status-body { flex: 1; }
+  .status-title { font-size: var(--text-h4); font-weight: 600; color: var(--neutral-800); margin-bottom: var(--space-1); }
+  .status-detail { font-size: var(--text-body-md); color: var(--neutral-500); }
+  .quick-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); margin-top: var(--space-8); }
+  .quick-action-btn { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); padding: var(--space-6); border: 1px solid var(--neutral-200); border-radius: var(--radius-lg); background: white; cursor: pointer; transition: all var(--transition-micro); text-decoration: none; color: var(--neutral-700); }
+  .quick-action-btn:hover { border-color: var(--color-teal-500); box-shadow: var(--shadow-2); color: var(--color-teal-500); }
+  .quick-action-icon { width: 44px; height: 44px; background: var(--neutral-100); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .quick-action-label { font-size: var(--text-body-md); font-weight: 600; text-align: center; }
+  .upcoming-appt { background: linear-gradient(135deg, var(--color-navy-600) 0%, var(--color-navy-400) 100%); border-radius: var(--radius-xl); padding: var(--space-8); color: white; margin-bottom: var(--space-8); }
+  .appt-date-badge { display: inline-flex; align-items: center; gap: var(--space-2); background: rgba(255,255,255,0.15); border-radius: var(--radius-md); padding: var(--space-2) var(--space-4); font-size: var(--text-body-sm); margin-bottom: var(--space-4); }
+  .appt-heading { font-size: var(--text-h2); font-weight: 700; margin-bottom: var(--space-2); }
+  .appt-sub { font-size: var(--text-body-md); opacity: 0.8; }
+  .appt-actions { margin-top: var(--space-6); display: flex; gap: var(--space-3); }
+  .btn-white { background: white; color: var(--color-navy-600); font-weight: 600; padding: var(--space-2) var(--space-4); border-radius: var(--radius-md); font-size: var(--text-body-md); border: none; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; }
+  .btn-outline-white { background: transparent; color: white; border: 1.5px solid rgba(255,255,255,0.5); padding: var(--space-2) var(--space-4); border-radius: var(--radius-md); font-size: var(--text-body-md); cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- Navigation Map
+| Element              | Action | Target Screen                   |
+|----------------------|--------|---------------------------------|
+| #btn-complete-intake | click  | SCR-005 (Intake Method)         |
+| #btn-book-appt       | click  | SCR-008 (Booking Calendar)      |
+| #btn-upload-docs     | click  | SCR-015 (Documents Upload)      |
+| #btn-view-appt       | click  | SCR-010 (Appointment Confirmation)|
+| #btn-logout          | click  | SCR-001 (Login)                 |
+-->
+
+<div class="app-shell">
+  <!-- Top Bar -->
+  <header class="topbar" role="banner">
+    <div class="topbar-logo" aria-label="PropelIQ Health Home">
+      <div class="logo-icon">P</div>
+      PropelIQ Health
+    </div>
+    <div class="topbar-spacer"></div>
+    <span class="topbar-role-badge">Patient</span>
+    <div class="topbar-avatar" aria-label="User account menu" tabindex="0">JS</div>
+    <button class="topbar-logout" id="btn-logout" aria-label="Sign out">Sign out</button>
+  </header>
+
+  <div class="app-main">
+    <!-- Sidebar -->
+    <nav class="sidebar" aria-label="Patient navigation">
+      <div class="sidebar-section-label">Patient Portal</div>
+      <ul class="sidebar-nav" role="list">
+        <li class="sidebar-nav-item active" role="listitem">
+          <a href="wireframe-SCR-004-patient-dashboard.html" aria-current="page">
+            <span class="nav-icon">⊞</span> Dashboard
+          </a>
+        </li>
+        <li class="sidebar-nav-item" role="listitem">
+          <a href="wireframe-SCR-005-intake-method.html">
+            <span class="nav-icon">📋</span> My Intake
+          </a>
+        </li>
+        <li class="sidebar-nav-item" role="listitem">
+          <a href="wireframe-SCR-008-booking-calendar.html">
+            <span class="nav-icon">📅</span> Book Appointment
+          </a>
+        </li>
+        <li class="sidebar-nav-item" role="listitem">
+          <a href="wireframe-SCR-015-documents-upload.html">
+            <span class="nav-icon">📄</span> My Documents
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Page Content -->
+    <main class="page-content" id="main-content">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="wireframe-SCR-004-patient-dashboard.html">Home</a>
+        <span class="sep" aria-hidden="true">›</span>
+        <span class="current" aria-current="page">Dashboard</span>
+      </nav>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Good morning, Jane</h1>
+          <p class="page-subtitle">Thursday, 17 April 2026</p>
+        </div>
+      </div>
+
+      <!-- Upcoming Appointment Banner -->
+      <div class="upcoming-appt" role="region" aria-label="Upcoming appointment">
+        <div class="appt-date-badge">📅 Upcoming appointment</div>
+        <div class="appt-heading">General Consultation</div>
+        <div class="appt-sub">Wednesday, 22 April 2026 · 10:30 AM · Dr. R. Patel</div>
+        <div class="appt-actions">
+          <a href="wireframe-SCR-010-confirmation.html" class="btn-white" id="btn-view-appt">View details</a>
+          <button class="btn-outline-white">Cancel appointment</button>
+        </div>
+      </div>
+
+      <!-- Status Cards -->
+      <div class="grid-3 mb-8">
+        <!-- Intake Status -->
+        <div class="card">
+          <div class="status-card">
+            <div class="status-icon intake" aria-hidden="true">📋</div>
+            <div class="status-body">
+              <div class="status-title">Intake form</div>
+              <div class="status-detail">Incomplete — 3 sections remaining</div>
+              <div style="margin-top: var(--space-3);">
+                <span class="badge badge-warning">Incomplete</span>
+              </div>
+              <a href="wireframe-SCR-005-intake-method.html" class="btn btn-primary btn-sm" id="btn-complete-intake" style="margin-top: var(--space-4);">
+                Complete intake
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Insurance Status -->
+        <div class="card">
+          <div class="status-card">
+            <div class="status-icon insurance" aria-hidden="true">🛡</div>
+            <div class="status-body">
+              <div class="status-title">Insurance</div>
+              <div class="status-detail">BlueCross Shield — verified</div>
+              <div style="margin-top: var(--space-3);">
+                <span class="badge badge-success">Verified</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Documents Status -->
+        <div class="card">
+          <div class="status-card">
+            <div class="status-icon appt" aria-hidden="true">📄</div>
+            <div class="status-body">
+              <div class="status-title">Clinical documents</div>
+              <div class="status-detail">2 documents uploaded</div>
+              <div style="margin-top: var(--space-3);">
+                <span class="badge badge-info">2 files</span>
+              </div>
+              <a href="wireframe-SCR-015-documents-upload.html" class="btn btn-secondary btn-sm" style="margin-top: var(--space-4);">
+                Manage
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <h2 style="margin-bottom: var(--space-4);">Quick actions</h2>
+      <div class="quick-actions">
+        <a href="wireframe-SCR-008-booking-calendar.html" class="quick-action-btn" id="btn-book-appt" aria-label="Book a new appointment">
+          <div class="quick-action-icon" aria-hidden="true">📅</div>
+          <span class="quick-action-label">Book appointment</span>
+        </a>
+        <a href="wireframe-SCR-015-documents-upload.html" class="quick-action-btn" id="btn-upload-docs" aria-label="Upload clinical documents">
+          <div class="quick-action-icon" aria-hidden="true">⬆</div>
+          <span class="quick-action-label">Upload documents</span>
+        </a>
+        <a href="wireframe-SCR-005-intake-method.html" class="quick-action-btn" aria-label="Complete your intake form">
+          <div class="quick-action-icon" aria-hidden="true">✏</div>
+          <span class="quick-action-label">Update intake</span>
+        </a>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="wireframe-annotation">
+  <span class="scr-id">SCR-004</span>
+  <span>Patient Dashboard</span>
+  <span class="priority-badge">P0</span>
+  <span class="uxr-tags">UXR: 001, 002, 003, 201, 301, 402, 501, 503, 604</span>
+</div>
+
+</body>
+</html>

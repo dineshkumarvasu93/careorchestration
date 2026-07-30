@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCR-019 — Admin User Management | PropelIQ Health</title>
+<link rel="stylesheet" href="wireframe-shared.css">
+<style>
+  .users-table { width: 100%; border-collapse: collapse; }
+  .users-table th { background: var(--neutral-50); font-size: var(--text-body-sm); font-weight: 600; color: var(--neutral-500); text-transform: uppercase; letter-spacing: 0.05em; padding: var(--space-3) var(--space-4); border-bottom: 2px solid var(--neutral-200); text-align: left; white-space: nowrap; }
+  .users-table td { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--neutral-200); vertical-align: middle; }
+  .users-table tr:hover td { background: var(--neutral-50); cursor: pointer; }
+  .users-table tr:last-child td { border-bottom: none; }
+  .filter-row { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; margin-bottom: var(--space-4); }
+  .user-avatar-sm { width: 36px; height: 36px; border-radius: 50%; background: var(--color-navy-600); color: white; display: flex; align-items: center; justify-content: center; font-size: var(--text-body-sm); font-weight: 700; flex-shrink: 0; }
+  .user-name-cell { display: flex; align-items: center; gap: var(--space-3); }
+  .sort-icon { color: var(--neutral-400); font-size: 12px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- Navigation Map
+| Element         | Action | Target Screen                     |
+|-----------------|--------|-----------------------------------|
+| #btn-create     | click  | SCR-020 (Admin User Detail/Edit)  |
+| #link-user-*    | click  | SCR-020 (Admin User Detail/Edit)  |
+| #nav-audit-log  | click  | SCR-021 (Audit Log Viewer)        |
+-->
+
+<div class="app-shell">
+  <header class="topbar" role="banner">
+    <div class="topbar-logo"><div class="logo-icon">P</div>PropelIQ Health</div>
+    <div class="topbar-spacer"></div>
+    <span class="topbar-role-badge" style="background:var(--color-error-bg);color:var(--color-error);">Admin</span>
+    <div class="topbar-avatar" tabindex="0">AC</div>
+    <button class="topbar-logout">Sign out</button>
+  </header>
+
+  <div class="app-main">
+    <nav class="sidebar" aria-label="Admin navigation">
+      <div class="sidebar-section-label">Admin Portal</div>
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-item active"><a href="#" aria-current="page"><span class="nav-icon">👥</span> User management</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-021-audit-log.html" id="nav-audit-log"><span class="nav-icon">📋</span> Audit log</a></li>
+      </ul>
+    </nav>
+
+    <main class="page-content" id="main-content">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">User management</h1>
+          <p class="page-subtitle">Manage clinic users, roles, and access permissions.</p>
+        </div>
+        <a href="wireframe-SCR-020-user-detail.html" class="btn btn-primary btn-md" id="btn-create">
+          + Create user
+        </a>
+      </div>
+
+      <!-- Filters and search -->
+      <div class="filter-row" role="search" aria-label="Filter and search users">
+        <input type="search" style="height:38px;padding:0 var(--space-3);border:1.5px solid var(--neutral-200);border-radius:var(--radius-md);font-size:var(--text-body-md);min-width:220px;"
+               placeholder="Search name or email…" aria-label="Search users">
+        <select style="height:38px;padding:0 var(--space-3);border:1.5px solid var(--neutral-200);border-radius:var(--radius-md);font-size:var(--text-body-md);" aria-label="Filter by role">
+          <option value="">All roles</option>
+          <option>Patient</option>
+          <option>Staff</option>
+          <option>Admin</option>
+        </select>
+        <select style="height:38px;padding:0 var(--space-3);border:1.5px solid var(--neutral-200);border-radius:var(--radius-md);font-size:var(--text-body-md);" aria-label="Filter by status">
+          <option value="">All statuses</option>
+          <option>Active</option>
+          <option>Inactive</option>
+          <option>Pending</option>
+        </select>
+        <span style="font-size:var(--text-body-sm);color:var(--neutral-400);margin-left:auto;">Showing 7 of 7 users</span>
+      </div>
+
+      <!-- Users Table -->
+      <div class="table-wrapper" role="region" aria-label="User management table" tabindex="0">
+        <table class="users-table" aria-label="System users">
+          <thead>
+            <tr>
+              <th scope="col">Name <span class="sort-icon" aria-label="Sort by name">⇅</span></th>
+              <th scope="col">Email</th>
+              <th scope="col">Role</th>
+              <th scope="col">Status</th>
+              <th scope="col">Last active <span class="sort-icon" aria-label="Sort by last active">⇅</span></th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr role="row" onclick="window.location='wireframe-SCR-020-user-detail.html'">
+              <td>
+                <div class="user-name-cell">
+                  <div class="user-avatar-sm" aria-hidden="true">RP</div>
+                  <a href="wireframe-SCR-020-user-detail.html" class="link" id="link-user-1" aria-label="Edit Dr. Rachel Patel">Dr. Rachel Patel</a>
+                </div>
+              </td>
+              <td style="color:var(--neutral-600);">r.patel@propeliq.health</td>
+              <td><span class="badge" style="background:var(--color-success-bg);color:var(--color-success);">Staff</span></td>
+              <td><span class="badge badge-success" aria-label="Status: Active">Active</span></td>
+              <td style="color:var(--neutral-500);font-size:var(--text-body-sm);">Today 09:14</td>
+              <td><a href="wireframe-SCR-020-user-detail.html" class="btn btn-ghost btn-sm" aria-label="Edit Dr. Rachel Patel">Edit</a></td>
+            </tr>
+            <tr role="row" onclick="window.location='wireframe-SCR-020-user-detail.html'">
+              <td>
+                <div class="user-name-cell">
+                  <div class="user-avatar-sm" aria-hidden="true">MC</div>
+                  <a href="wireframe-SCR-020-user-detail.html" class="link" id="link-user-2" aria-label="Edit Dr. Michael Chen">Dr. Michael Chen</a>
+                </div>
+              </td>
+              <td style="color:var(--neutral-600);">m.chen@propeliq.health</td>
+              <td><span class="badge" style="background:var(--color-success-bg);color:var(--color-success);">Staff</span></td>
+              <td><span class="badge badge-success" aria-label="Status: Active">Active</span></td>
+              <td style="color:var(--neutral-500);font-size:var(--text-body-sm);">Today 08:55</td>
+              <td><a href="wireframe-SCR-020-user-detail.html" class="btn btn-ghost btn-sm" aria-label="Edit Dr. Michael Chen">Edit</a></td>
+            </tr>
+            <tr role="row" onclick="window.location='wireframe-SCR-020-user-detail.html'">
+              <td>
+                <div class="user-name-cell">
+                  <div class="user-avatar-sm" aria-hidden="true">TO</div>
+                  <a href="wireframe-SCR-020-user-detail.html" class="link" aria-label="Edit Nurse Temi Okafor">Nurse Temi Okafor</a>
+                </div>
+              </td>
+              <td style="color:var(--neutral-600);">t.okafor@propeliq.health</td>
+              <td><span class="badge" style="background:var(--color-success-bg);color:var(--color-success);">Staff</span></td>
+              <td><span class="badge badge-success" aria-label="Status: Active">Active</span></td>
+              <td style="color:var(--neutral-500);font-size:var(--text-body-sm);">Yesterday 16:30</td>
+              <td><a href="wireframe-SCR-020-user-detail.html" class="btn btn-ghost btn-sm" aria-label="Edit Nurse Temi Okafor">Edit</a></td>
+            </tr>
+            <tr role="row" onclick="window.location='wireframe-SCR-020-user-detail.html'">
+              <td>
+                <div class="user-name-cell">
+                  <div class="user-avatar-sm" aria-hidden="true">JS</div>
+                  <a href="wireframe-SCR-020-user-detail.html" class="link" aria-label="Edit Jane Smith">Jane Smith</a>
+                </div>
+              </td>
+              <td style="color:var(--neutral-600);">jane.smith@email.com</td>
+              <td><span class="badge badge-info">Patient</span></td>
+              <td><span class="badge badge-success" aria-label="Status: Active">Active</span></td>
+              <td style="color:var(--neutral-500);font-size:var(--text-body-sm);">Today 08:12</td>
+              <td><a href="wireframe-SCR-020-user-detail.html" class="btn btn-ghost btn-sm" aria-label="Edit Jane Smith">Edit</a></td>
+            </tr>
+            <tr role="row" onclick="window.location='wireframe-SCR-020-user-detail.html'">
+              <td>
+                <div class="user-name-cell">
+                  <div class="user-avatar-sm" style="background:var(--neutral-300);" aria-hidden="true">DO</div>
+                  <a href="wireframe-SCR-020-user-detail.html" class="link" aria-label="Edit David Okonkwo">David Okonkwo</a>
+                </div>
+              </td>
+              <td style="color:var(--neutral-600);">d.okonkwo@email.com</td>
+              <td><span class="badge badge-info">Patient</span></td>
+              <td><span class="badge badge-neutral" aria-label="Status: Inactive">Inactive</span></td>
+              <td style="color:var(--neutral-500);font-size:var(--text-body-sm);">3 weeks ago</td>
+              <td><a href="wireframe-SCR-020-user-detail.html" class="btn btn-ghost btn-sm" aria-label="Edit David Okonkwo">Edit</a></td>
+            </tr>
+            <tr role="row" onclick="window.location='wireframe-SCR-020-user-detail.html'">
+              <td>
+                <div class="user-name-cell">
+                  <div class="user-avatar-sm" style="background:var(--color-warning); color:white;" aria-hidden="true">PS</div>
+                  <a href="wireframe-SCR-020-user-detail.html" class="link" aria-label="Edit Priya Sharma">Priya Sharma</a>
+                </div>
+              </td>
+              <td style="color:var(--neutral-600);">p.sharma@email.com</td>
+              <td><span class="badge badge-info">Patient</span></td>
+              <td><span class="badge badge-warning" aria-label="Status: Pending verification">Pending</span></td>
+              <td style="color:var(--neutral-500);font-size:var(--text-body-sm);">Never</td>
+              <td><a href="wireframe-SCR-020-user-detail.html" class="btn btn-ghost btn-sm" aria-label="Edit Priya Sharma">Edit</a></td>
+            </tr>
+            <tr role="row" onclick="window.location='wireframe-SCR-020-user-detail.html'">
+              <td>
+                <div class="user-name-cell">
+                  <div class="user-avatar-sm" style="background:var(--color-error);" aria-hidden="true">AC</div>
+                  <a href="wireframe-SCR-020-user-detail.html" class="link" aria-label="Edit Admin Clare">Admin Clare (you)</a>
+                </div>
+              </td>
+              <td style="color:var(--neutral-600);">a.clare@propeliq.health</td>
+              <td><span class="badge" style="background:var(--color-error-bg);color:var(--color-error);">Admin</span></td>
+              <td><span class="badge badge-success" aria-label="Status: Active">Active</span></td>
+              <td style="color:var(--neutral-500);font-size:var(--text-body-sm);">Now</td>
+              <td><button class="btn btn-ghost btn-sm" disabled aria-label="Cannot edit your own account from this view">Edit</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-4);">
+        <span style="font-size:var(--text-body-sm);color:var(--neutral-500);">7 users total</span>
+        <div class="flex gap-2">
+          <button class="btn btn-secondary btn-sm" disabled aria-label="Previous page" aria-disabled="true">← Prev</button>
+          <button class="btn btn-secondary btn-sm" disabled aria-label="Next page" aria-disabled="true">Next →</button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="wireframe-annotation">
+  <span class="scr-id">SCR-019</span>
+  <span>Admin User Management</span>
+  <span class="priority-badge">P1</span>
+  <span class="uxr-tags">UXR: 201, 301, 402, 501, 502, 604</span>
+</div>
+
+</body>
+</html>

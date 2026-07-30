@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCR-007 — Manual Intake Form | PropelIQ Health</title>
+<link rel="stylesheet" href="wireframe-shared.css">
+</head>
+<body>
+
+<!-- Navigation Map
+| Element            | Action | Target Screen               |
+|--------------------|--------|-----------------------------|
+| #btn-switch-ai     | click  | SCR-006 (AI Intake Chat)    |
+| #btn-review        | click  | SCR-007b (Intake Review)    |
+| #link-back         | click  | SCR-005 (Intake Method)     |
+-->
+
+<div class="app-shell">
+  <header class="topbar" role="banner">
+    <div class="topbar-logo"><div class="logo-icon">P</div>PropelIQ Health</div>
+    <div class="topbar-spacer"></div>
+    <span style="font-size:var(--text-body-sm);color:var(--color-success);">✓ Saved 8 seconds ago</span>
+    <span class="topbar-role-badge">Patient</span>
+    <div class="topbar-avatar" tabindex="0">JS</div>
+    <button class="topbar-logout">Sign out</button>
+  </header>
+
+  <div class="app-main">
+    <nav class="sidebar" aria-label="Patient navigation">
+      <div class="sidebar-section-label">Patient Portal</div>
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-004-patient-dashboard.html"><span class="nav-icon">⊞</span> Dashboard</a></li>
+        <li class="sidebar-nav-item active"><a href="#" aria-current="page"><span class="nav-icon">📋</span> My Intake</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-008-booking-calendar.html"><span class="nav-icon">📅</span> Book Appointment</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-015-documents-upload.html"><span class="nav-icon">📄</span> My Documents</a></li>
+      </ul>
+    </nav>
+
+    <main class="page-content" id="main-content">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="wireframe-SCR-004-patient-dashboard.html">Dashboard</a>
+        <span class="sep">›</span>
+        <a href="wireframe-SCR-005-intake-method.html" id="link-back">Intake method</a>
+        <span class="sep">›</span>
+        <span class="current" aria-current="page">Manual form</span>
+      </nav>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Pre-appointment intake form</h1>
+          <p class="page-subtitle">Complete all required fields before your appointment on 22 April 2026.</p>
+        </div>
+        <a href="wireframe-SCR-006-ai-intake-chat.html" class="btn btn-secondary btn-sm" id="btn-switch-ai">
+          💬 Switch to AI chat
+        </a>
+      </div>
+
+      <!-- Progress -->
+      <div style="margin-bottom: var(--space-8);">
+        <div style="display:flex; justify-content:space-between; font-size:var(--text-body-sm); margin-bottom:var(--space-2);">
+          <span>Form completion</span><span style="font-weight:600;">3 / 7 sections completed</span>
+        </div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" style="width:43%" role="progressbar" aria-valuenow="43" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+      </div>
+
+      <form novalidate>
+        <!-- Section 1: Chief Complaint -->
+        <div class="card mb-6">
+          <div class="card-header">
+            <h3>Chief complaint <span class="badge badge-success" style="margin-left:var(--space-2);">Completed</span></h3>
+          </div>
+          <div class="form-group">
+            <label for="chief-complaint">Main reason for visit <span class="required">*</span></label>
+            <textarea id="chief-complaint" name="chiefComplaint" aria-required="true" rows="3"
+                      placeholder="Describe your main symptoms or reason for visiting the clinic…">Chest discomfort and occasional shortness of breath for the past two weeks.</textarea>
+          </div>
+          <div class="form-group">
+            <label for="symptom-duration">Duration of symptoms <span class="required">*</span></label>
+            <input type="text" id="symptom-duration" name="duration" value="2 weeks" aria-required="true">
+          </div>
+          <div class="form-group">
+            <label for="symptom-onset">Onset <span class="required">*</span></label>
+            <select id="symptom-onset" name="onset" aria-required="true">
+              <option>Gradual</option>
+              <option selected>Sudden</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Section 2: Medication History -->
+        <div class="card mb-6">
+          <div class="card-header">
+            <h3>Medication history <span class="badge badge-warning" style="margin-left:var(--space-2);">Incomplete</span></h3>
+          </div>
+          <div class="form-group">
+            <label for="current-meds">Current medications</label>
+            <textarea id="current-meds" name="currentMeds" placeholder="List any medications you are currently taking, including dosage and frequency…" rows="3"></textarea>
+            <span class="field-helper">Include prescription, over-the-counter, and supplements.</span>
+          </div>
+          <div class="form-group">
+            <label for="allergies">Known allergies <span class="required">*</span></label>
+            <input type="text" id="allergies" name="allergies" placeholder="e.g. Penicillin, NSAIDs, Latex" aria-required="true">
+          </div>
+        </div>
+
+        <!-- Section 3: Medical History (placeholder collapsed) -->
+        <div class="card mb-6">
+          <div class="card-header">
+            <h3>Medical history <span class="badge badge-neutral" style="margin-left:var(--space-2);">Not started</span></h3>
+          </div>
+          <div class="form-group">
+            <label for="past-conditions">Past medical conditions</label>
+            <textarea id="past-conditions" name="pastConditions" placeholder="List any significant past illnesses, surgeries, or hospitalisations…" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="family-history">Family medical history</label>
+            <input type="text" id="family-history" name="familyHistory" placeholder="e.g. Heart disease, Diabetes, Cancer">
+          </div>
+        </div>
+
+        <!-- Section 4: Validation error example -->
+        <div class="card mb-6">
+          <div class="card-header">
+            <h3>Vital information <span class="badge badge-error" style="margin-left:var(--space-2);">Has errors</span></h3>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="dob">Date of birth <span class="required">*</span></label>
+              <input type="text" id="dob" name="dob" class="error" value="32/04/1990" aria-required="true" aria-describedby="dob-error" aria-invalid="true">
+              <div class="field-error" id="dob-error" role="alert">⚠ Invalid date format — use DD/MM/YYYY</div>
+            </div>
+            <div class="form-group">
+              <label for="gender">Biological sex <span class="required">*</span></label>
+              <select id="gender" name="gender" aria-required="true">
+                <option value="">Select…</option>
+                <option>Male</option>
+                <option selected>Female</option>
+                <option>Intersex</option>
+                <option>Prefer not to say</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-between items-center mt-8">
+          <a href="wireframe-SCR-005-intake-method.html" class="btn btn-ghost btn-md">← Back</a>
+          <div class="flex gap-3">
+            <button type="button" class="btn btn-secondary btn-md">Save draft</button>
+            <a href="wireframe-SCR-007b-intake-review.html" class="btn btn-primary btn-md" id="btn-review">
+              Review answers →
+            </a>
+          </div>
+        </div>
+      </form>
+    </main>
+  </div>
+</div>
+
+<div class="wireframe-annotation">
+  <span class="scr-id">SCR-007</span>
+  <span>Manual Intake Form</span>
+  <span class="priority-badge">P0</span>
+  <span class="uxr-tags">UXR: 004, 201, 202, 204, 301, 303, 501, 601</span>
+</div>
+
+</body>
+</html>

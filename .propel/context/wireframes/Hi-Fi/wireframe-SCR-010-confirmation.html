@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCR-010 — Appointment Confirmation | PropelIQ Health</title>
+<link rel="stylesheet" href="wireframe-shared.css">
+<style>
+  .confirmation-hero { text-align: center; padding: var(--space-8) 0; }
+  .check-circle { width: 80px; height: 80px; background: var(--color-success-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto var(--space-4); border: 3px solid var(--color-success); }
+  .confirmation-hero h1 { color: var(--color-success); }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-top: var(--space-6); }
+  .detail-item { background: var(--neutral-50); border-radius: var(--radius-md); padding: var(--space-4); }
+  .detail-label { font-size: var(--text-body-sm); color: var(--neutral-500); font-weight: 500; margin-bottom: var(--space-1); }
+  .detail-value { font-size: var(--text-h4); font-weight: 700; color: var(--neutral-800); }
+  .pdf-link { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4); background: var(--color-info-bg); border: 1px solid #BFDBFE; border-radius: var(--radius-md); margin-top: var(--space-4); color: var(--color-info); font-weight: 600; text-decoration: none; }
+  .next-steps { margin-top: var(--space-8); }
+  .next-steps ul { margin-top: var(--space-3); list-style: none; display: flex; flex-direction: column; gap: var(--space-3); }
+  .next-steps li { display: flex; align-items: flex-start; gap: var(--space-3); font-size: var(--text-body-md); color: var(--neutral-600); }
+  .step-icon { width: 28px; height: 28px; background: var(--color-teal-100); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; color: var(--color-teal-500); }
+</style>
+</head>
+<body>
+
+<!-- Navigation Map
+| Element              | Action | Target Screen              |
+|----------------------|--------|----------------------------|
+| #btn-dashboard       | click  | SCR-004 (Patient Dashboard)|
+| #btn-add-calendar    | click  | (external — toast on fail) |
+-->
+
+<div class="app-shell">
+  <header class="topbar" role="banner">
+    <div class="topbar-logo"><div class="logo-icon">P</div>PropelIQ Health</div>
+    <div class="topbar-spacer"></div>
+    <span class="topbar-role-badge">Patient</span>
+    <div class="topbar-avatar" tabindex="0">JS</div>
+    <button class="topbar-logout">Sign out</button>
+  </header>
+
+  <div class="app-main">
+    <nav class="sidebar" aria-label="Patient navigation">
+      <div class="sidebar-section-label">Patient Portal</div>
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-item active"><a href="wireframe-SCR-004-patient-dashboard.html"><span class="nav-icon">⊞</span> Dashboard</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-005-intake-method.html"><span class="nav-icon">📋</span> My Intake</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-008-booking-calendar.html"><span class="nav-icon">📅</span> Book Appointment</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-015-documents-upload.html"><span class="nav-icon">📄</span> My Documents</a></li>
+      </ul>
+    </nav>
+
+    <main class="page-content" id="main-content" style="max-width: 700px;">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="wireframe-SCR-004-patient-dashboard.html">Dashboard</a>
+        <span class="sep">›</span>
+        <a href="wireframe-SCR-008-booking-calendar.html">Book appointment</a>
+        <span class="sep">›</span>
+        <span class="current" aria-current="page">Confirmed</span>
+      </nav>
+
+      <!-- Confirmation hero -->
+      <div class="confirmation-hero" role="status" aria-live="polite">
+        <div class="check-circle" aria-hidden="true">✓</div>
+        <h1 class="page-title" style="color: var(--color-success);">Appointment confirmed!</h1>
+        <p style="color: var(--neutral-500); margin-top: var(--space-2);">
+          Booking reference: <strong class="mono">BK-2026-04-0847</strong>
+        </p>
+      </div>
+
+      <!-- Appointment details card -->
+      <div class="card">
+        <div class="card-header">
+          <h2 style="font-size:var(--text-h4);">Appointment details</h2>
+          <span class="badge badge-success">Confirmed</span>
+        </div>
+
+        <div class="detail-grid">
+          <div class="detail-item">
+            <div class="detail-label">Date & time</div>
+            <div class="detail-value">Wed 22 Apr 2026</div>
+            <div style="font-size:var(--text-h4); color:var(--color-teal-500); font-weight:700;">10:00 AM</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Provider</div>
+            <div class="detail-value">Dr. R. Patel</div>
+            <div style="font-size:var(--text-body-sm); color:var(--neutral-500);">General Practitioner</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Appointment type</div>
+            <div class="detail-value">General Consultation</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Insurance</div>
+            <div class="detail-value" style="font-size:var(--text-body-md);">BlueCross Shield</div>
+            <span class="badge badge-success" style="margin-top:var(--space-1);">Pre-verified</span>
+          </div>
+        </div>
+
+        <!-- PDF confirmation link -->
+        <a href="#" class="pdf-link" aria-label="Download PDF confirmation document">
+          <span style="font-size:20px;">📄</span>
+          <span>Download PDF confirmation</span>
+          <span style="margin-left:auto; font-size:var(--text-body-sm); opacity:0.8;">Sent to jane.smith@email.com</span>
+        </a>
+      </div>
+
+      <!-- Next steps -->
+      <div class="next-steps">
+        <h2 style="font-size:var(--text-h4);">What's next</h2>
+        <ul>
+          <li>
+            <div class="step-icon" aria-hidden="true">✉</div>
+            Confirmation email sent to <strong>jane.smith@email.com</strong>
+          </li>
+          <li>
+            <div class="step-icon" aria-hidden="true">📱</div>
+            SMS reminder will be sent 24 hours before your appointment
+          </li>
+          <li>
+            <div class="step-icon" aria-hidden="true">📋</div>
+            Complete your intake form if not already done
+          </li>
+        </ul>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-3 mt-8">
+        <a href="wireframe-SCR-004-patient-dashboard.html" class="btn btn-primary btn-md" id="btn-dashboard">
+          Back to dashboard
+        </a>
+        <button class="btn btn-secondary btn-md" id="btn-add-calendar" type="button">
+          Add to calendar
+        </button>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="wireframe-annotation">
+  <span class="scr-id">SCR-010</span>
+  <span>Appointment Confirmation</span>
+  <span class="priority-badge">P0</span>
+  <span class="uxr-tags">UXR: 201, 402, 501, 602</span>
+</div>
+
+</body>
+</html>

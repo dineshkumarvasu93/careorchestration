@@ -1,0 +1,16 @@
+project_id          = "akhila-gcp-123-493309"
+project_name        = "patient-access"
+environment         = "staging"
+region              = "us-central1"
+owner               = "platform-team"
+cost_center         = "healthcare-platform"
+sql_tier            = "db-n1-standard-2"
+sql_ha              = true
+redis_tier          = "STANDARD_HA"
+redis_memory_gb     = 4
+min_instances       = 1
+max_instances       = 10
+ollama_machine_type = "e2-standard-4"
+deletion_protection = true
+alert_email         = "ops@patient-access.example.com"
+domain_name         = "staging.patient-access.example.com"

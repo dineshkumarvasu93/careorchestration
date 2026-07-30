@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCR-011 — Staff Home Dashboard | PropelIQ Health</title>
+<link rel="stylesheet" href="wireframe-shared.css">
+<style>
+  .queue-preview-row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--neutral-200); font-size: var(--text-body-md); }
+  .queue-preview-row:last-child { border-bottom: none; }
+  .patient-name { font-weight: 600; color: var(--neutral-800); min-width: 140px; }
+  .time-badge { font-family: var(--font-mono); font-size: var(--text-body-sm); color: var(--neutral-500); min-width: 60px; }
+  .status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .dot-scheduled { background: var(--color-info); }
+  .dot-arrived { background: var(--color-success); }
+  .dot-in-progress { background: var(--color-warning); }
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); }
+</style>
+</head>
+<body>
+
+<!-- Navigation Map
+| Element           | Action | Target Screen               |
+|-------------------|--------|-----------------------------|
+| #btn-add-walkin   | click  | SCR-013 (Patient Search)    |
+| #btn-view-queue   | click  | SCR-014 (Queue View)        |
+| #link-patient-1   | click  | SCR-016 (360° Patient View) |
+-->
+
+<div class="app-shell">
+  <header class="topbar" role="banner">
+    <div class="topbar-logo"><div class="logo-icon">P</div>PropelIQ Health</div>
+    <div class="topbar-spacer"></div>
+    <span class="topbar-role-badge" style="background:var(--color-success-bg);color:var(--color-success);">Staff</span>
+    <div class="topbar-avatar" tabindex="0">RP</div>
+    <button class="topbar-logout">Sign out</button>
+  </header>
+
+  <div class="app-main">
+    <nav class="sidebar" aria-label="Staff navigation">
+      <div class="sidebar-section-label">Staff Portal</div>
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-item active"><a href="#" aria-current="page"><span class="nav-icon">⊞</span> Dashboard</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-014-queue-view.html"><span class="nav-icon">📋</span> Queue</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-013-patient-search.html"><span class="nav-icon">🔍</span> Patients</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-016-patient-360.html"><span class="nav-icon">👤</span> Patient View</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-018-coding-panel.html"><span class="nav-icon">🏥</span> Medical Coding</a></li>
+      </ul>
+    </nav>
+
+    <main class="page-content" id="main-content">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Good morning, Rachel</h1>
+          <p class="page-subtitle">Thursday, 17 April 2026 — Today's schedule</p>
+        </div>
+        <a href="wireframe-SCR-013-patient-search.html" class="btn btn-primary btn-md" id="btn-add-walkin">
+          + Add walk-in
+        </a>
+      </div>
+
+      <!-- Metric Cards -->
+      <div class="metric-grid" role="region" aria-label="Today's metrics">
+        <div class="metric-card">
+          <div class="metric-label">Appointments today</div>
+          <div class="metric-value">14</div>
+          <div class="metric-trend">↑ 2 more than yesterday</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Patients arrived</div>
+          <div class="metric-value">6</div>
+          <div style="margin-top:var(--space-1); font-size:var(--text-body-sm); color:var(--neutral-500);">8 still scheduled</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">High risk (no-show)</div>
+          <div class="metric-value" style="color:var(--color-error);">3</div>
+          <div style="margin-top:var(--space-1); font-size:var(--text-body-sm); color:var(--neutral-500);">Consider calling ahead</div>
+        </div>
+      </div>
+
+      <!-- Today's Queue Preview -->
+      <div class="card" style="margin-bottom: var(--space-8);">
+        <div class="section-header">
+          <h2 style="font-size:var(--text-h4);">Today's queue</h2>
+          <a href="wireframe-SCR-014-queue-view.html" class="btn btn-secondary btn-sm" id="btn-view-queue">
+            View full queue →
+          </a>
+        </div>
+
+        <div role="table" aria-label="Today's appointment queue preview">
+          <div role="row" class="queue-preview-row" style="font-weight:600;font-size:var(--text-body-sm);color:var(--neutral-500);background:var(--neutral-50);">
+            <span role="columnheader" style="min-width:140px;">Patient</span>
+            <span role="columnheader" style="min-width:60px;">Time</span>
+            <span role="columnheader" style="flex:1;">Provider</span>
+            <span role="columnheader" style="min-width:100px;">Status</span>
+            <span role="columnheader" style="min-width:80px;">Risk</span>
+            <span role="columnheader">Actions</span>
+          </div>
+
+          <div role="row" class="queue-preview-row">
+            <a href="wireframe-SCR-016-patient-360.html" class="patient-name" id="link-patient-1"
+               aria-label="View 360° profile for Jane Smith">Jane Smith</a>
+            <span class="time-badge">09:00</span>
+            <span style="color:var(--neutral-600);flex:1;">Dr. R. Patel</span>
+            <span class="badge badge-success">Arrived</span>
+            <span class="badge risk-low" aria-label="No-show risk: Low">↓ Low</span>
+            <button class="btn btn-ghost btn-sm" type="button">View</button>
+          </div>
+
+          <div role="row" class="queue-preview-row">
+            <a href="wireframe-SCR-016-patient-360.html" class="patient-name" aria-label="View 360° profile for Michael Chen">Michael Chen</a>
+            <span class="time-badge">09:30</span>
+            <span style="color:var(--neutral-600);flex:1;">Dr. M. Chen</span>
+            <span class="badge badge-info">Scheduled</span>
+            <span class="badge risk-medium" aria-label="No-show risk: Medium">— Medium</span>
+            <button class="btn btn-ghost btn-sm" type="button">View</button>
+          </div>
+
+          <div role="row" class="queue-preview-row">
+            <a href="wireframe-SCR-016-patient-360.html" class="patient-name" aria-label="View 360° profile for Priya Sharma">Priya Sharma</a>
+            <span class="time-badge">10:00</span>
+            <span style="color:var(--neutral-600);flex:1;">Nurse T. Okafor</span>
+            <span class="badge badge-info">Scheduled</span>
+            <span class="badge risk-high" aria-label="No-show risk: High">↑ High</span>
+            <button class="btn btn-ghost btn-sm" type="button">View</button>
+          </div>
+
+          <div role="row" class="queue-preview-row">
+            <a href="wireframe-SCR-016-patient-360.html" class="patient-name" aria-label="View 360° profile for David Okonkwo">David Okonkwo</a>
+            <span class="time-badge">10:30</span>
+            <span style="color:var(--neutral-600);flex:1;">Dr. R. Patel</span>
+            <span class="badge badge-success" style="background:var(--color-warning-bg);color:var(--color-warning);">In progress</span>
+            <span class="badge risk-low" aria-label="No-show risk: Low">↓ Low</span>
+            <button class="btn btn-ghost btn-sm" type="button">View</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="grid-3">
+        <a href="wireframe-SCR-012-walkin-booking.html" class="card" style="display:flex;align-items:center;gap:var(--space-4);text-decoration:none;color:inherit;">
+          <div style="width:44px;height:44px;background:var(--color-info-bg);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:20px;" aria-hidden="true">🚶</div>
+          <div>
+            <div style="font-weight:600;color:var(--neutral-800);">Walk-in booking</div>
+            <div style="font-size:var(--text-body-sm);color:var(--neutral-500);">Register a walk-in</div>
+          </div>
+        </a>
+        <a href="wireframe-SCR-016-patient-360.html" class="card" style="display:flex;align-items:center;gap:var(--space-4);text-decoration:none;color:inherit;">
+          <div style="width:44px;height:44px;background:var(--color-ai-bg);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:20px;" aria-hidden="true">🔬</div>
+          <div>
+            <div style="font-weight:600;color:var(--neutral-800);">Patient 360° View</div>
+            <div style="font-size:var(--text-body-sm);color:var(--neutral-500);">Clinical intelligence</div>
+          </div>
+        </a>
+        <a href="wireframe-SCR-018-coding-panel.html" class="card" style="display:flex;align-items:center;gap:var(--space-4);text-decoration:none;color:inherit;">
+          <div style="width:44px;height:44px;background:var(--color-success-bg);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:20px;" aria-hidden="true">🏷</div>
+          <div>
+            <div style="font-weight:600;color:var(--neutral-800);">Medical coding</div>
+            <div style="font-size:var(--text-body-sm);color:var(--neutral-500);">ICD-10 / CPT codes</div>
+          </div>
+        </a>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="wireframe-annotation">
+  <span class="scr-id">SCR-011</span>
+  <span>Staff Home Dashboard</span>
+  <span class="priority-badge">P0</span>
+  <span class="uxr-tags">UXR: 001, 002, 003, 102, 201, 301, 402, 501, 502</span>
+</div>
+
+</body>
+</html>

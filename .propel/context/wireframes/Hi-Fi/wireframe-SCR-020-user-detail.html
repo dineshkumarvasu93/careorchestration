@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCR-020 — Admin User Detail / Edit | PropelIQ Health</title>
+<link rel="stylesheet" href="wireframe-shared.css">
+<style>
+  .deactivate-confirm-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 50; display: flex; align-items: center; justify-content: center; }
+  .deactivate-confirm-box { background: white; border-radius: var(--radius-xl); padding: var(--space-8); max-width: 420px; width: 100%; box-shadow: var(--shadow-4); border-top: 6px solid var(--color-error); }
+  .user-profile-card { background: var(--neutral-50); border: 1px solid var(--neutral-200); border-radius: var(--radius-lg); padding: var(--space-5) var(--space-6); display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-6); }
+  .profile-avatar { width: 64px; height: 64px; background: var(--color-navy-600); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: var(--text-h3); font-weight: 700; flex-shrink: 0; }
+  .profile-meta { font-size: var(--text-body-sm); color: var(--neutral-500); margin-top: 2px; }
+  .danger-zone { margin-top: var(--space-8); border: 2px solid var(--color-error); border-radius: var(--radius-lg); padding: var(--space-5) var(--space-6); }
+  .danger-zone h3 { color: var(--color-error); margin-bottom: var(--space-2); }
+  .danger-zone p { font-size: var(--text-body-sm); color: var(--neutral-600); margin-bottom: var(--space-4); }
+</style>
+</head>
+<body>
+
+<!-- Navigation Map
+| Element             | Action | Target Screen                       |
+|---------------------|--------|-------------------------------------|
+| #btn-save           | click  | SCR-019 (Admin User Management)     |
+| #btn-cancel         | click  | SCR-019 (Admin User Management)     |
+| #btn-deactivate     | click  | Shows deactivate confirm dialog     |
+| #btn-deact-confirm  | click  | SCR-019 (Admin User Management)     |
+-->
+
+<div class="app-shell">
+  <header class="topbar" role="banner">
+    <div class="topbar-logo"><div class="logo-icon">P</div>PropelIQ Health</div>
+    <div class="topbar-spacer"></div>
+    <span class="topbar-role-badge" style="background:var(--color-error-bg);color:var(--color-error);">Admin</span>
+    <div class="topbar-avatar" tabindex="0">AC</div>
+    <button class="topbar-logout">Sign out</button>
+  </header>
+
+  <div class="app-main">
+    <nav class="sidebar" aria-label="Admin navigation">
+      <div class="sidebar-section-label">Admin Portal</div>
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-item active"><a href="wireframe-SCR-019-admin-users.html" aria-current="page"><span class="nav-icon">👥</span> User management</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-021-audit-log.html"><span class="nav-icon">📋</span> Audit log</a></li>
+      </ul>
+    </nav>
+
+    <main class="page-content" id="main-content" style="max-width: 700px;">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="wireframe-SCR-019-admin-users.html">User management</a>
+        <span class="sep">›</span>
+        <span class="current" aria-current="page">Dr. Rachel Patel</span>
+      </nav>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Edit user</h1>
+          <p class="page-subtitle">Update profile, role, and access status for this user.</p>
+        </div>
+      </div>
+
+      <!-- Profile summary -->
+      <div class="user-profile-card" aria-label="User profile summary">
+        <div class="profile-avatar" aria-hidden="true">RP</div>
+        <div>
+          <div style="font-size:var(--text-h4); font-weight:700; color:var(--neutral-800);">Dr. Rachel Patel</div>
+          <div class="profile-meta">r.patel@propeliq.health</div>
+          <div style="margin-top:var(--space-2); display:flex; gap:var(--space-2);">
+            <span class="badge" style="background:var(--color-success-bg);color:var(--color-success);">Staff</span>
+            <span class="badge badge-success">Active</span>
+            <span style="font-size:var(--text-body-sm); color:var(--neutral-400);">Last active: Today 09:14</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Edit form -->
+      <div class="card">
+        <h2 style="font-size:var(--text-h4); margin-bottom:var(--space-5);">Profile information</h2>
+        <form novalidate aria-label="Edit user form">
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="edit-first">First name <span class="required">*</span></label>
+              <input type="text" id="edit-first" name="firstName" value="Rachel" aria-required="true">
+            </div>
+            <div class="form-group">
+              <label for="edit-last">Last name <span class="required">*</span></label>
+              <input type="text" id="edit-last" name="lastName" value="Patel" aria-required="true">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="edit-email">Email address <span class="required">*</span></label>
+            <input type="email" id="edit-email" name="email" value="r.patel@propeliq.health" aria-required="true">
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="edit-role">Role <span class="required">*</span></label>
+              <select id="edit-role" name="role" aria-required="true">
+                <option>Patient</option>
+                <option selected>Staff</option>
+                <option>Admin</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="edit-status">Account status <span class="required">*</span></label>
+              <select id="edit-status" name="status" aria-required="true">
+                <option selected>Active</option>
+                <option>Inactive</option>
+                <option>Pending verification</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="alert alert-info" style="margin-top:var(--space-4);" role="note">
+            <span>ℹ</span>
+            <span>Changing a user's role will immediately affect their access permissions. Changes are logged in the audit trail.</span>
+          </div>
+        </form>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="flex justify-between items-center mt-6">
+        <a href="wireframe-SCR-019-admin-users.html" class="btn btn-ghost btn-md" id="btn-cancel">← Cancel</a>
+        <a href="wireframe-SCR-019-admin-users.html" class="btn btn-primary btn-md" id="btn-save">
+          Save changes
+        </a>
+      </div>
+
+      <!-- Danger zone -->
+      <div class="danger-zone" role="region" aria-label="Danger zone — irreversible actions">
+        <h3>Danger zone</h3>
+        <p>Deactivating this account will immediately revoke the user's access. This action can be reversed by an admin.</p>
+        <button class="btn btn-error btn-md" id="btn-deactivate" type="button"
+                aria-label="Deactivate Dr. Rachel Patel's account">
+          Deactivate account
+        </button>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Deactivate Confirm Dialog -->
+<div class="deactivate-confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="deact-title" aria-describedby="deact-desc">
+  <div class="deactivate-confirm-box">
+    <h2 id="deact-title" style="font-size:var(--text-h4); margin-bottom:var(--space-2); color:var(--color-error);">
+      ⚠ Deactivate this account?
+    </h2>
+    <p id="deact-desc" style="font-size:var(--text-body-md); color:var(--neutral-600); margin-bottom:var(--space-6);">
+      <strong>Dr. Rachel Patel</strong> will immediately lose access to PropelIQ Health. Any scheduled appointments will not be automatically reassigned. This action will be logged.
+    </p>
+    <div class="flex gap-3 justify-end">
+      <button class="btn btn-secondary btn-md" type="button" aria-label="Cancel deactivation">Cancel</button>
+      <a href="wireframe-SCR-019-admin-users.html" class="btn btn-error btn-md" id="btn-deact-confirm"
+         aria-label="Confirm deactivation of Dr. Rachel Patel">
+        Confirm deactivation
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="wireframe-annotation">
+  <span class="scr-id">SCR-020</span>
+  <span>Admin User Detail / Edit</span>
+  <span class="priority-badge">P1</span>
+  <span class="uxr-tags">UXR: 201, 204, 301, 402, 501, 601</span>
+</div>
+
+</body>
+</html>

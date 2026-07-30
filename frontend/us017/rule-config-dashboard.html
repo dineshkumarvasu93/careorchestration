@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rule Configuration Management</title>
+  <link rel="stylesheet" href="./rule-config-dashboard.css">
+</head>
+<body>
+  <header class="head">
+    <h1>Rule Configuration Management</h1>
+    <p>Publish, activate, and inspect versioned rule sets.</p>
+  </header>
+
+  <main class="layout">
+    <section class="card">
+      <h2>Publish Rule Version</h2>
+      <form id="publish-form" class="form-grid">
+        <label for="version">Version</label>
+        <input id="version" name="version" type="text" placeholder="RULES-002" required>
+
+        <label for="description">Description</label>
+        <input id="description" name="description" type="text" value="Candidate rule set" required>
+
+        <label for="threshold">eGFR Decline Threshold</label>
+        <input id="threshold" name="threshold" type="number" min="1" step="1" value="8" required>
+
+        <label for="high-risk-toggle">Include High-Risk Plan</label>
+        <select id="high-risk-toggle" name="includeHighRisk">
+          <option value="true" selected>true</option>
+          <option value="false">false</option>
+        </select>
+
+        <button type="submit">Publish</button>
+      </form>
+      <p id="publish-status" role="status" aria-live="polite">Submit a ruleset to publish.</p>
+    </section>
+
+    <section class="card">
+      <h2>Activate Version</h2>
+      <form id="activate-form" class="inline-form">
+        <label for="activate-version">Version</label>
+        <input id="activate-version" name="activateVersion" type="text" placeholder="RULES-002" required>
+        <button type="submit">Activate</button>
+      </form>
+      <p id="activate-status" role="status" aria-live="polite">No activation requested.</p>
+      <p>Active Version: <strong id="active-version" data-testid="active-version">-</strong></p>
+    </section>
+
+    <section class="card">
+      <h2>Published Versions</h2>
+      <button id="refresh-button" type="button">Refresh Versions</button>
+      <ul id="version-list" data-testid="version-list"></ul>
+    </section>
+  </main>
+
+  <script type="module" src="./rule-config-dashboard.js"></script>
+</body>
+</html>

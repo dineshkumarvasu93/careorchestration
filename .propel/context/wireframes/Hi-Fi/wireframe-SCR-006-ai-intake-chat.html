@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCR-006 — AI-Assisted Intake Chat | PropelIQ Health</title>
+<link rel="stylesheet" href="wireframe-shared.css">
+<style>
+  .chat-layout { display: flex; height: calc(100vh - var(--topbar-height)); }
+  .chat-sidebar { width: 280px; border-right: 1px solid var(--neutral-200); background: white; padding: var(--space-6); flex-shrink: 0; overflow-y: auto; }
+  .chat-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .chat-header { padding: var(--space-4) var(--space-6); border-bottom: 1px solid var(--neutral-200); display: flex; align-items: center; justify-content: space-between; background: white; }
+  .chat-messages { flex: 1; overflow-y: auto; padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-4); background: var(--neutral-50); }
+  .chat-input-area { padding: var(--space-4) var(--space-6); border-top: 1px solid var(--neutral-200); background: white; display: flex; gap: var(--space-3); align-items: flex-end; }
+  .chat-input-area textarea { flex: 1; resize: none; min-height: 44px; max-height: 120px; padding: var(--space-3); }
+  .autosave-indicator { font-size: var(--text-body-sm); color: var(--color-success); display: flex; align-items: center; gap: var(--space-1); }
+  .progress-section { margin-bottom: var(--space-4); }
+  .progress-label { font-size: var(--text-body-sm); font-weight: 600; color: var(--neutral-700); margin-bottom: var(--space-2); display: flex; justify-content: space-between; }
+  .field-chip { font-size: var(--text-body-sm); padding: 2px var(--space-2); border-radius: var(--radius-sm); margin-bottom: var(--space-1); display: flex; align-items: center; gap: var(--space-1); }
+  .field-done { background: var(--color-success-bg); color: var(--color-success); }
+  .field-todo { background: var(--neutral-100); color: var(--neutral-500); }
+  .switch-link { font-size: var(--text-body-sm); color: var(--color-teal-500); cursor: pointer; display: flex; align-items: center; gap: var(--space-1); }
+</style>
+</head>
+<body>
+
+<!-- Navigation Map
+| Element             | Action | Target Screen               |
+|---------------------|--------|-----------------------------|
+| #btn-switch-manual  | click  | SCR-007 (Manual Intake)     |
+| #btn-to-review      | click  | SCR-007b (Intake Review)    |
+| #link-back          | click  | SCR-005 (Intake Method)     |
+-->
+
+<div class="app-shell">
+  <header class="topbar" role="banner">
+    <div class="topbar-logo"><div class="logo-icon">P</div>PropelIQ Health</div>
+    <div class="topbar-spacer"></div>
+    <div class="autosave-indicator" aria-live="polite" aria-label="Auto-save status">✓ Saved 12 seconds ago</div>
+    <span class="topbar-role-badge">Patient</span>
+    <div class="topbar-avatar" tabindex="0">JS</div>
+    <button class="topbar-logout">Sign out</button>
+  </header>
+
+  <div class="app-main" style="flex-direction:row; overflow:hidden;">
+    <!-- Chat Progress Sidebar -->
+    <aside class="chat-sidebar" aria-label="Intake progress">
+      <nav class="breadcrumb" aria-label="Breadcrumb" style="margin-bottom: var(--space-6);">
+        <a href="wireframe-SCR-005-intake-method.html" id="link-back">Method</a>
+        <span class="sep">›</span>
+        <span class="current">AI Chat</span>
+      </nav>
+
+      <h3 style="margin-bottom: var(--space-4);">Intake progress</h3>
+
+      <div class="progress-section">
+        <div class="progress-label">
+          <span>Overall</span><span>40%</span>
+        </div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" style="width:40%" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" role="progressbar"></div>
+        </div>
+      </div>
+
+      <div style="margin-top: var(--space-4); display: flex; flex-direction: column; gap: var(--space-1);">
+        <div class="field-chip field-done" aria-label="Chief complaint - completed">✓ Chief complaint</div>
+        <div class="field-chip field-done" aria-label="Symptom onset - completed">✓ Symptom onset</div>
+        <div class="field-chip field-todo" aria-label="Medication history - pending">○ Medication history</div>
+        <div class="field-chip field-todo" aria-label="Allergies - pending">○ Allergies</div>
+        <div class="field-chip field-todo" aria-label="Medical history - pending">○ Medical history</div>
+        <div class="field-chip field-todo" aria-label="Current symptoms - pending">○ Current symptoms</div>
+        <div class="field-chip field-todo" aria-label="Social history - pending">○ Social history</div>
+      </div>
+
+      <div style="margin-top: var(--space-8); padding-top: var(--space-4); border-top: 1px solid var(--neutral-200);">
+        <a href="wireframe-SCR-007-manual-intake.html" class="switch-link" id="btn-switch-manual"
+           aria-label="Switch to manual intake form">
+          📝 Switch to manual form
+        </a>
+      </div>
+    </aside>
+
+    <!-- Chat Main Area -->
+    <div class="chat-layout" style="flex:1; width:0;">
+      <div class="chat-main">
+        <div class="chat-header">
+          <div>
+            <h2 style="font-size: var(--text-h4); margin: 0;">Pre-appointment intake</h2>
+            <p class="text-sm">AI-assisted — answers are reviewed by your care team</p>
+          </div>
+          <a href="wireframe-SCR-007b-intake-review.html" class="btn btn-secondary btn-sm" id="btn-to-review">
+            Review answers →
+          </a>
+        </div>
+
+        <div class="chat-messages" role="log" aria-label="Intake chat conversation" aria-live="polite">
+          <!-- AI greeting -->
+          <div class="chat-bubble chat-bubble-ai" aria-label="AI message">
+            Hello Jane! I'll help you complete your pre-appointment intake. Let's start with what brings you in today.
+            <br><br><strong>What is your main reason for visiting the clinic?</strong>
+          </div>
+
+          <!-- User response -->
+          <div class="chat-bubble chat-bubble-user" aria-label="Your message">
+            I've been having chest discomfort and occasional shortness of breath for the past two weeks.
+          </div>
+
+          <!-- AI follow-up -->
+          <div class="chat-bubble chat-bubble-ai" aria-label="AI message">
+            Thank you for sharing that. I've recorded your chief complaint as: <em>"Chest discomfort and shortness of breath — 2 weeks duration."</em>
+            <br><br>Can you describe the chest discomfort? Is it a sharp pain, pressure, tightness, or something else?
+          </div>
+
+          <!-- User response -->
+          <div class="chat-bubble chat-bubble-user" aria-label="Your message">
+            It feels more like pressure or tightness, especially when I climb stairs.
+          </div>
+
+          <!-- AI follow-up -->
+          <div class="chat-bubble chat-bubble-ai" aria-label="AI message">
+            Understood. Pressure/tightness on exertion — noted. Does the discomfort radiate anywhere, such as your left arm, jaw, or back?
+          </div>
+
+          <!-- Typing indicator -->
+          <div class="typing-indicator" aria-label="AI is typing" role="status">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        </div>
+
+        <div class="chat-input-area">
+          <textarea id="chat-message" placeholder="Type your answer…" aria-label="Your intake answer"
+                    rows="1"></textarea>
+          <button class="btn btn-primary btn-md" aria-label="Send message" type="button">
+            Send →
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wireframe-annotation">
+  <span class="scr-id">SCR-006</span>
+  <span>AI-Assisted Intake Chat</span>
+  <span class="priority-badge">P0</span>
+  <span class="uxr-tags">UXR: 004, 201, 202, 203, 403, 501, 503, 504</span>
+</div>
+
+</body>
+</html>

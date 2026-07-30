@@ -1,0 +1,57 @@
+{
+  "patients": [
+    {
+      "patient_id": "PT-0001",
+      "is_synthetic": true,
+      "demographics": {
+        "first_name": "John",
+        "last_name": "Smith",
+        "age": 58,
+        "gender": "Male"
+      },
+      "ckd_stage": "Stage 3",
+      "egfr": {
+        "current": 48,
+        "previous": 58,
+        "unit": "mL/min/1.73m2",
+        "trend": "declining"
+      },
+      "uacr": {
+        "status": "missing",
+        "last_value": null,
+        "last_test_date": null
+      },
+      "medication_summary": [
+        "Lisinopril 10 mg daily",
+        "Metformin 500 mg twice daily"
+      ],
+      "last_nephrology_visit_date": "2025-03-15"
+    },
+    {
+      "patient_id": "PT-0002",
+      "is_synthetic": true,
+      "demographics": {
+        "first_name": "Maya",
+        "last_name": "Patel",
+        "age": 64,
+        "gender": "Female"
+      },
+      "ckd_stage": "Stage 2",
+      "egfr": {
+        "current": 71,
+        "previous": 73,
+        "unit": "mL/min/1.73m2",
+        "trend": "stable"
+      },
+      "uacr": {
+        "status": "up_to_date",
+        "last_value": 23,
+        "last_test_date": "2026-02-04"
+      },
+      "medication_summary": [
+        "Losartan 50 mg daily"
+      ],
+      "last_nephrology_visit_date": "2026-01-11"
+    }
+  ]
+}

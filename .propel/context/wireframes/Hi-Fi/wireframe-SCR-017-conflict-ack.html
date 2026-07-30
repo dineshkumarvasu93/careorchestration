@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCR-017 — Conflict Acknowledgement Panel | PropelIQ Health</title>
+<link rel="stylesheet" href="wireframe-shared.css">
+<style>
+  .conflict-card { border: 2px solid var(--color-error); border-radius: var(--radius-xl); padding: var(--space-5) var(--space-6); margin-bottom: var(--space-4); background: white; }
+  .conflict-card.resolved { border-color: var(--color-success); opacity: 0.7; }
+  .conflict-type-tag { display: inline-flex; align-items: center; gap: var(--space-1); padding: 2px 12px; border-radius: var(--radius-full); font-size: var(--text-body-sm); font-weight: 600; margin-bottom: var(--space-3); }
+  .tag-interaction { background: var(--color-error-bg); color: var(--color-error); border: 1px solid #FECACA; }
+  .tag-duplicate { background: var(--color-warning-bg); color: var(--color-warning); border: 1px solid #FDE68A; }
+  .conflict-headline { font-size: var(--text-h4); font-weight: 700; color: var(--neutral-800); margin-bottom: var(--space-2); }
+  .conflict-description { font-size: var(--text-body-md); color: var(--neutral-600); line-height: 1.6; }
+  .conflict-fields { display: flex; gap: var(--space-3); margin-top: var(--space-4); margin-bottom: var(--space-4); flex-wrap: wrap; }
+  .conflict-field-chip { padding: var(--space-2) var(--space-3); background: var(--neutral-100); border-radius: var(--radius-md); font-size: var(--text-body-sm); font-family: var(--font-mono); color: var(--neutral-700); }
+  .conflict-actions { display: flex; gap: var(--space-3); margin-top: var(--space-4); }
+  .resolution-note { margin-top: var(--space-3); }
+  .resolution-note label { font-size: var(--text-body-sm); font-weight: 600; color: var(--neutral-600); margin-bottom: var(--space-2); display: block; }
+  .resolved-banner { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); background: var(--color-success-bg); border-radius: var(--radius-md); margin-top: var(--space-3); }
+  .source-citation { margin-top: var(--space-3); padding: var(--space-3) var(--space-4); background: var(--color-ai-bg); border-left: 3px solid var(--color-ai); border-radius: 0 var(--radius-md) var(--radius-md) 0; font-size: var(--text-body-sm); color: var(--neutral-600); }
+</style>
+</head>
+<body>
+
+<!-- Navigation Map
+| Element        | Action | Target Screen                |
+|----------------|--------|------------------------------|
+| #btn-done      | click  | SCR-016 (360° Patient View)  |
+| #btn-skip      | click  | SCR-016 (360° Patient View)  |
+-->
+
+<div class="app-shell">
+  <header class="topbar" role="banner">
+    <div class="topbar-logo"><div class="logo-icon">P</div>PropelIQ Health</div>
+    <div class="topbar-spacer"></div>
+    <span class="topbar-role-badge" style="background:var(--color-success-bg);color:var(--color-success);">Staff</span>
+    <div class="topbar-avatar" tabindex="0">RP</div>
+    <button class="topbar-logout">Sign out</button>
+  </header>
+
+  <div class="app-main">
+    <nav class="sidebar" aria-label="Staff navigation">
+      <div class="sidebar-section-label">Staff Portal</div>
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-011-staff-dashboard.html"><span class="nav-icon">⊞</span> Dashboard</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-014-queue-view.html"><span class="nav-icon">📋</span> Queue</a></li>
+        <li class="sidebar-nav-item active"><a href="#" aria-current="page"><span class="nav-icon">👤</span> Patient View</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-018-coding-panel.html"><span class="nav-icon">🏥</span> Medical Coding</a></li>
+      </ul>
+    </nav>
+
+    <main class="page-content" id="main-content" style="max-width: 820px;">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="wireframe-SCR-014-queue-view.html">Queue</a>
+        <span class="sep">›</span>
+        <a href="wireframe-SCR-016-patient-360.html">Jane Smith — 360° View</a>
+        <span class="sep">›</span>
+        <span class="current" aria-current="page">Resolve conflicts</span>
+      </nav>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Clinical conflict review</h1>
+          <p class="page-subtitle">Review and acknowledge or dismiss each flagged conflict before proceeding to medical coding.</p>
+        </div>
+      </div>
+
+      <!-- Overall progress -->
+      <div style="margin-bottom:var(--space-6);" role="region" aria-label="Conflict resolution progress">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-2);">
+          <span style="font-size:var(--text-body-md);font-weight:600;">Progress</span>
+          <span style="font-size:var(--text-body-md);font-weight:700;color:var(--color-teal-500);" aria-live="polite">1 of 2 resolved</span>
+        </div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" style="width:50%;" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" aria-label="50% of conflicts resolved"></div>
+        </div>
+      </div>
+
+      <!-- Conflict Card 1: RESOLVED -->
+      <div class="conflict-card resolved" role="article" aria-label="Conflict 1: Duplicate diagnosis — Resolved">
+        <div class="conflict-type-tag tag-duplicate" aria-label="Conflict type: Duplicate entry">⚠ Duplicate entry</div>
+        <div class="conflict-headline">Duplicate diagnosis: J18.9 (Pneumonia)</div>
+        <div class="conflict-description">
+          ICD-10 code J18.9 (Pneumonia, unspecified) appears twice in the diagnosis list — once from the manual intake form and once from an AI-extracted document. One instance should be removed.
+        </div>
+        <div class="conflict-fields" aria-label="Conflicting fields">
+          <span class="conflict-field-chip">Diagnoses › J18.9 (source: manual)</span>
+          <span class="conflict-field-chip">Diagnoses › J18.9 (source: AI-extracted)</span>
+        </div>
+        <div class="resolved-banner" role="status" aria-label="Resolved">
+          <span style="font-size:20px;" aria-hidden="true">✓</span>
+          <div>
+            <strong style="color:var(--color-success);">Acknowledged &amp; resolved</strong>
+            <div style="font-size:var(--text-body-sm); color:var(--neutral-600);">Duplicate removed by Dr. R. Patel — 9:15 AM today</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Conflict Card 2: UNRESOLVED -->
+      <div class="conflict-card" role="article" aria-label="Conflict 2: Medication interaction — Requires review">
+        <div class="conflict-type-tag tag-interaction" aria-label="Conflict type: Drug interaction">🔴 Drug interaction</div>
+        <div class="conflict-headline">Potential interaction: Aspirin + Warfarin</div>
+        <div class="conflict-description">
+          Patient is listed with both Aspirin 75mg daily and Warfarin 5mg daily. Concurrent use significantly increases bleeding risk. Clinical review is recommended before prescribing or continuing either medication.
+        </div>
+        <div class="conflict-fields" aria-label="Conflicting fields">
+          <span class="conflict-field-chip">Medications › Aspirin 75mg</span>
+          <span class="conflict-field-chip">Medications › Warfarin 5mg</span>
+        </div>
+        <div class="source-citation" role="note">
+          <strong>🤖 AI evidence:</strong> Interaction identified from uploaded document "BloodTest_Results_April2026.pdf" (page 2, medication reconciliation table). MIMS Drug Interaction Database reference applied.
+        </div>
+        <div class="resolution-note">
+          <label for="ack-note">Resolution notes (required to acknowledge)</label>
+          <textarea id="ack-note" name="ackNote" rows="2" placeholder="Describe the clinical decision or action taken…" aria-required="true"></textarea>
+        </div>
+        <div class="conflict-actions">
+          <button class="btn btn-primary btn-md" type="button" aria-label="Acknowledge and mark resolved">
+            ✓ Acknowledge &amp; resolve
+          </button>
+          <button class="btn btn-secondary btn-md" type="button" aria-label="Dismiss this conflict">
+            Dismiss
+          </button>
+        </div>
+      </div>
+
+      <!-- Footer actions -->
+      <div class="flex justify-between items-center mt-8">
+        <a href="wireframe-SCR-016-patient-360.html" class="btn btn-ghost btn-md" id="btn-skip">
+          ← Back to patient view
+        </a>
+        <a href="wireframe-SCR-016-patient-360.html" class="btn btn-primary btn-lg" id="btn-done">
+          Done — return to patient view →
+        </a>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="wireframe-annotation">
+  <span class="scr-id">SCR-017</span>
+  <span>Conflict Acknowledgement Panel</span>
+  <span class="priority-badge">P1</span>
+  <span class="uxr-tags">UXR: 201, 403, 501</span>
+</div>
+
+</body>
+</html>

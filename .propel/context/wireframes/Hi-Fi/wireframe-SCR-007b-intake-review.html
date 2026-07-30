@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCR-007b — Intake Review & Summary | PropelIQ Health</title>
+<link rel="stylesheet" href="wireframe-shared.css">
+<style>
+  .review-section { margin-bottom: var(--space-6); }
+  .review-section-title { font-size: var(--text-h4); font-weight: 600; color: var(--neutral-800); margin-bottom: var(--space-4); padding-bottom: var(--space-2); border-bottom: 2px solid var(--color-teal-100); display: flex; align-items: center; gap: var(--space-2); }
+  dl.data-list { display: grid; grid-template-columns: 200px 1fr; gap: var(--space-2) var(--space-4); }
+  dt { font-size: var(--text-body-md); font-weight: 600; color: var(--neutral-500); }
+  dd { font-size: var(--text-body-md); color: var(--neutral-800); }
+  .edit-section-link { font-size: var(--text-body-sm); color: var(--color-teal-500); margin-left: auto; }
+  .submit-note { background: var(--neutral-50); border: 1px solid var(--neutral-200); border-radius: var(--radius-md); padding: var(--space-4); font-size: var(--text-body-sm); color: var(--neutral-600); margin-bottom: var(--space-6); }
+</style>
+</head>
+<body>
+
+<!-- Navigation Map
+| Element         | Action | Target Screen                  |
+|-----------------|--------|--------------------------------|
+| #btn-confirm    | click  | SCR-004 (Patient Dashboard)    |
+| #btn-edit       | click  | SCR-007 (Manual Intake Form)   |
+| #link-back      | click  | SCR-007 (Manual Intake Form)   |
+-->
+
+<div class="app-shell">
+  <header class="topbar" role="banner">
+    <div class="topbar-logo"><div class="logo-icon">P</div>PropelIQ Health</div>
+    <div class="topbar-spacer"></div>
+    <span class="topbar-role-badge">Patient</span>
+    <div class="topbar-avatar" tabindex="0">JS</div>
+    <button class="topbar-logout">Sign out</button>
+  </header>
+
+  <div class="app-main">
+    <nav class="sidebar" aria-label="Patient navigation">
+      <div class="sidebar-section-label">Patient Portal</div>
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-004-patient-dashboard.html"><span class="nav-icon">⊞</span> Dashboard</a></li>
+        <li class="sidebar-nav-item active"><a href="#" aria-current="page"><span class="nav-icon">📋</span> My Intake</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-008-booking-calendar.html"><span class="nav-icon">📅</span> Book Appointment</a></li>
+        <li class="sidebar-nav-item"><a href="wireframe-SCR-015-documents-upload.html"><span class="nav-icon">📄</span> My Documents</a></li>
+      </ul>
+    </nav>
+
+    <main class="page-content" id="main-content">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="wireframe-SCR-004-patient-dashboard.html">Dashboard</a>
+        <span class="sep">›</span>
+        <a href="wireframe-SCR-007-manual-intake.html" id="link-back">Intake form</a>
+        <span class="sep">›</span>
+        <span class="current" aria-current="page">Review & confirm</span>
+      </nav>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Review your intake answers</h1>
+          <p class="page-subtitle">Please review your information before submitting. Your care team will review this before your appointment.</p>
+        </div>
+      </div>
+
+      <div class="submit-note" role="note">
+        <strong>Before you confirm:</strong> Once submitted, you can still update your intake by returning to this section before your appointment date.
+      </div>
+
+      <!-- Section 1: Chief Complaint -->
+      <div class="card review-section">
+        <div class="review-section-title">
+          Chief complaint
+          <span class="badge badge-success">Completed</span>
+          <a href="wireframe-SCR-007-manual-intake.html" class="edit-section-link" id="btn-edit" aria-label="Edit chief complaint section">Edit</a>
+        </div>
+        <dl class="data-list">
+          <dt>Main reason for visit</dt>
+          <dd>Chest discomfort and occasional shortness of breath for the past two weeks.</dd>
+          <dt>Duration</dt>
+          <dd>2 weeks</dd>
+          <dt>Onset</dt>
+          <dd>Sudden</dd>
+        </dl>
+      </div>
+
+      <!-- Section 2: Medication History -->
+      <div class="card review-section">
+        <div class="review-section-title">
+          Medication history
+          <span class="badge badge-success">Completed</span>
+          <a href="wireframe-SCR-007-manual-intake.html" class="edit-section-link" aria-label="Edit medication history section">Edit</a>
+        </div>
+        <dl class="data-list">
+          <dt>Current medications</dt>
+          <dd>Aspirin 75mg daily, Atorvastatin 20mg nightly</dd>
+          <dt>Known allergies</dt>
+          <dd>Penicillin (rash), Latex (contact)</dd>
+        </dl>
+      </div>
+
+      <!-- Section 3: Medical History -->
+      <div class="card review-section">
+        <div class="review-section-title">
+          Medical history
+          <span class="badge badge-success">Completed</span>
+          <a href="wireframe-SCR-007-manual-intake.html" class="edit-section-link" aria-label="Edit medical history section">Edit</a>
+        </div>
+        <dl class="data-list">
+          <dt>Past conditions</dt>
+          <dd>Hypertension (diagnosed 2019), Hypercholesterolaemia (2021)</dd>
+          <dt>Family history</dt>
+          <dd>Father — coronary artery disease (age 58)</dd>
+        </dl>
+      </div>
+
+      <!-- Section 4: Vital Information -->
+      <div class="card review-section">
+        <div class="review-section-title">
+          Vital information
+          <span class="badge badge-success">Completed</span>
+          <a href="wireframe-SCR-007-manual-intake.html" class="edit-section-link" aria-label="Edit vital information section">Edit</a>
+        </div>
+        <dl class="data-list">
+          <dt>Date of birth</dt>
+          <dd>04/04/1990 (Age 36)</dd>
+          <dt>Biological sex</dt>
+          <dd>Female</dd>
+        </dl>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex justify-between items-center mt-8">
+        <a href="wireframe-SCR-007-manual-intake.html" class="btn btn-ghost btn-md">← Make changes</a>
+        <a href="wireframe-SCR-004-patient-dashboard.html" class="btn btn-primary btn-lg" id="btn-confirm">
+          Confirm & submit intake ✓
+        </a>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="wireframe-annotation">
+  <span class="scr-id">SCR-007b</span>
+  <span>Intake Review & Summary</span>
+  <span class="priority-badge">P0</span>
+  <span class="uxr-tags">UXR: 201, 202, 402, 501</span>
+</div>
+
+</body>
+</html>

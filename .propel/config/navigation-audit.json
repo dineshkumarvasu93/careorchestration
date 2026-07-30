@@ -1,0 +1,137 @@
+{
+  "version": "1.0",
+  "description": "Navigation click-path audit configuration for PropelIQ Health (UXR-001). Adding a new screen requires updating this file. CI gate fails if any configured path exceeds maxClicks.",
+  "flows": [
+    {
+      "persona": "Patient",
+      "task": "Book Appointment",
+      "startRoute": "/dashboard/patient",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "a[href='/booking']",
+          "expectRoute": "/booking"
+        },
+        {
+          "action": "click",
+          "selector": "[data-testid='booking-continue']",
+          "expectRoute": "/booking/insurance"
+        }
+      ],
+      "maxClicks": 3
+    },
+    {
+      "persona": "Patient",
+      "task": "Complete Intake",
+      "startRoute": "/dashboard/patient",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "a[href='/intake']",
+          "expectRoute": "/intake"
+        },
+        {
+          "action": "click",
+          "selector": "[data-testid='intake-ai-option']",
+          "expectRoute": "/intake/ai"
+        }
+      ],
+      "maxClicks": 3
+    },
+    {
+      "persona": "Patient",
+      "task": "Upload Document",
+      "startRoute": "/dashboard/patient",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "a[href='/documents']",
+          "expectRoute": "/documents"
+        }
+      ],
+      "maxClicks": 3
+    },
+    {
+      "persona": "Staff",
+      "task": "View Queue",
+      "startRoute": "/dashboard/staff",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "a[href='/queue']",
+          "expectRoute": "/queue"
+        }
+      ],
+      "maxClicks": 3
+    },
+    {
+      "persona": "Staff",
+      "task": "View Patient 360",
+      "startRoute": "/dashboard/staff",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "a[href='/queue']",
+          "expectRoute": "/queue"
+        },
+        {
+          "action": "click",
+          "selector": "[data-testid='queue-row-0'] a",
+          "expectRoute": "/patients/"
+        }
+      ],
+      "maxClicks": 3
+    },
+    {
+      "persona": "Staff",
+      "task": "Add Walk-In",
+      "startRoute": "/dashboard/staff",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "a[href='/patients/search']",
+          "expectRoute": "/patients/search"
+        },
+        {
+          "action": "click",
+          "selector": "[data-testid='walkin-book-button']",
+          "expectRoute": "/walk-in"
+        }
+      ],
+      "maxClicks": 3
+    },
+    {
+      "persona": "Admin",
+      "task": "View Users",
+      "startRoute": "/admin/users",
+      "steps": [],
+      "maxClicks": 0
+    },
+    {
+      "persona": "Admin",
+      "task": "View User Detail",
+      "startRoute": "/admin/users",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "[data-testid='user-row-0'] a",
+          "expectRoute": "/admin/users/"
+        }
+      ],
+      "maxClicks": 3
+    },
+    {
+      "persona": "Admin",
+      "task": "View Audit Log",
+      "startRoute": "/admin/users",
+      "steps": [
+        {
+          "action": "click",
+          "selector": "a[href='/admin/audit']",
+          "expectRoute": "/admin/audit"
+        }
+      ],
+      "maxClicks": 3
+    }
+  ]
+}
