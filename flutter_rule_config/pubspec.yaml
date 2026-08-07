@@ -4,9 +4,9 @@ publish_to: "none"
 version: 0.1.0
 
 environment:
-  # Dart 3.2+ / Flutter 3.16+ for stable dart:js_interop and the DragTarget
-  # onAcceptWithDetails APIs.
-  sdk: ">=3.2.0 <4.0.0"
+  # Dart 3.3+ for extension types (used by the js_interop bridge) plus stable
+  # dart:js_interop and the DragTarget onAcceptWithDetails APIs.
+  sdk: ">=3.3.0 <4.0.0"
 
 dependencies:
   flutter:

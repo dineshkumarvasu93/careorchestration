@@ -1,0 +1,11 @@
+{
+  "name": "Rule Modules",
+  "short_name": "RuleModules",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#eef3e2",
+  "theme_color": "#2f6e3e",
+  "description": "Drag-and-drop rule configuration UI for Care Orchestration.",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false
+}
