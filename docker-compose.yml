@@ -1,0 +1,83 @@
+# Care Orchestration local stack.
+# Works with Docker Desktop and Rancher Desktop (dockerd/moby engine).
+#   Rancher Desktop: use `docker compose ...`, or `nerdctl compose ...` on the
+#   containerd engine.
+#
+# Services:
+#   postgres  - database that persists rule configuration versions
+#   pgadmin   - web UI to inspect the database (http://localhost:5050)
+#   backend   - FastAPI app, wired to Postgres over the Docker network
+#   frontend  - static dashboards served by nginx (http://localhost:5500)
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: care-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-care}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-care_password}
+      POSTGRES_DB: ${POSTGRES_DB:-care_orchestration}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-care} -d ${POSTGRES_DB:-care_orchestration}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - care-net
+
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: care-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - care-net
+
+  backend:
+    build:
+      context: ./backend
+    container_name: care-backend
+    environment:
+      # Host "postgres" resolves over the Docker network to the db service.
+      DATABASE_URL: postgresql://${POSTGRES_USER:-care}:${POSTGRES_PASSWORD:-care_password}@postgres:5432/${POSTGRES_DB:-care_orchestration}
+      APP_ENV: ${APP_ENV:-dev}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - care-net
+
+  frontend:
+    image: nginx:1.27-alpine
+    container_name: care-frontend
+    ports:
+      - "${FRONTEND_PORT:-5500}:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+    depends_on:
+      - backend
+    networks:
+      - care-net
+
+volumes:
+  postgres_data:
+
+networks:
+  care-net:
+    driver: bridge

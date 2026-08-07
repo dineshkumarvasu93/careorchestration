@@ -1,0 +1,21 @@
+name: rule_config_flutter
+description: Drag-and-drop rule configuration island for Care Orchestration.
+publish_to: "none"
+version: 0.1.0
+
+environment:
+  # Dart 3.2+ / Flutter 3.16+ for stable dart:js_interop and the DragTarget
+  # onAcceptWithDetails APIs.
+  sdk: ">=3.2.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_lints: ^4.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true

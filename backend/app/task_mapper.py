@@ -30,6 +30,11 @@ class GapTaskMapper:
                 owner="care-coordinator",
                 task_title="Continue Routine Monitoring",
             ),
+            "REC-CKD-003": TaskTemplate(
+                template_id="TPL-NEPH-HIGH-RISK-PLAN",
+                owner="nephrology-coordinator",
+                task_title="Initiate High-Risk CKD Follow-up Plan",
+            ),
             # Backward-compatible templates used in manual run tests.
             "REC-001": TaskTemplate(
                 template_id="TPL-LAB-UACR",

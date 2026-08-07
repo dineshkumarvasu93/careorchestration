@@ -1,0 +1,4 @@
+# Extra dependencies used only when running inside Docker with Postgres.
+# Installed on top of requirements.txt by backend/Dockerfile.
+sqlalchemy==2.0.36
+psycopg[binary]==3.2.3

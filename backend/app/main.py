@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import logging
 import time
+from contextlib import asynccontextmanager
 from pathlib import Path
 from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import Response
 
 from .api.orchestration import router as orchestration_router
@@ -20,15 +22,70 @@ logging.basicConfig(
 )
 logger = logging.getLogger("care-orchestration-api")
 
+
+def initialize_app_state(target_app: FastAPI) -> None:
+    """Load settings and seed patient fixtures.
+
+    Runs both at import time (so a module-level ``TestClient(app)`` that never
+    enters the ASGI lifespan still has seeded data) and from the lifespan
+    handler (for real ``uvicorn`` startup). It is idempotent: settings load is
+    pure and ``patient_store.load_from_file`` replaces the fixture snapshot.
+    """
+    if getattr(target_app.state, "initialized", False):
+        return
+
+    try:
+        settings = load_settings()
+        fixture_path = Path(__file__).parent / "data" / "fixtures" / "patients.json"
+        patient_store.load_from_file(fixture_path)
+        target_app.state.settings = settings
+        target_app.state.seed_fixture_path = str(fixture_path)
+        target_app.state.initialized = True
+        logger.info(
+            "Service startup complete: name=%s env=%s version=%s seeded_patients=%s",
+            settings.service_name,
+            settings.environment,
+            settings.app_version,
+            patient_store.count,
+        )
+    except SettingsError as exc:
+        logger.exception("Startup configuration error: %s", exc)
+        raise RuntimeError(f"Startup configuration error: {exc}") from exc
+    except SeedDataError as exc:
+        logger.exception("Seed data error: %s", exc)
+        raise RuntimeError(f"Seed data error: {exc}") from exc
+
+
+@asynccontextmanager
+async def lifespan(fastapi_app: FastAPI):
+    initialize_app_state(fastapi_app)
+    yield
+
+
 app = FastAPI(
     title="AI Care Orchestration API",
     version="0.1.0",
     description="Backend skeleton for care orchestration workflows.",
+    lifespan=lifespan,
 )
 
 app.include_router(orchestration_router)
 app.include_router(patients_router)
 app.include_router(policy_router)
+
+# Permissive CORS for local development so browser front-ends (the static HTML
+# dashboards and the Flutter Web app) can call the API from a different origin.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Seed immediately at import so tests using a module-level ``TestClient(app)``
+# (which does not run the ASGI lifespan) still have patient data available.
+initialize_app_state(app)
 
 
 @app.middleware("http")
@@ -64,29 +121,6 @@ async def correlation_id_middleware(request: Request, call_next) -> Response:
         latency_ms,
     )
     return response
-
-
-@app.on_event("startup")
-def startup_event() -> None:
-    try:
-        settings = load_settings()
-        fixture_path = Path(__file__).parent / "data" / "fixtures" / "patients.json"
-        patient_store.load_from_file(fixture_path)
-        app.state.settings = settings
-        app.state.seed_fixture_path = str(fixture_path)
-        logger.info(
-            "Service startup complete: name=%s env=%s version=%s seeded_patients=%s",
-            settings.service_name,
-            settings.environment,
-            settings.app_version,
-            patient_store.count,
-        )
-    except SettingsError as exc:
-        logger.exception("Startup configuration error: %s", exc)
-        raise RuntimeError(f"Startup configuration error: {exc}") from exc
-    except SeedDataError as exc:
-        logger.exception("Seed data error: %s", exc)
-        raise RuntimeError(f"Seed data error: {exc}") from exc
 
 
 @app.get("/health")

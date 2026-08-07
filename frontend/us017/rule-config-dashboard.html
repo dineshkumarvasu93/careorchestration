@@ -16,20 +16,38 @@
     <section class="card">
       <h2>Publish Rule Version</h2>
       <form id="publish-form" class="form-grid">
-        <label for="version">Version</label>
-        <input id="version" name="version" type="text" placeholder="RULES-002" required>
+        <div class="field">
+          <label for="version">Version</label>
+          <input id="version" name="version" type="text" placeholder="RULES-002" required>
+        </div>
 
-        <label for="description">Description</label>
-        <input id="description" name="description" type="text" value="Candidate rule set" required>
+        <div class="field">
+          <label for="description">Description</label>
+          <input id="description" name="description" type="text" value="Candidate rule set" required>
+        </div>
 
-        <label for="threshold">eGFR Decline Threshold</label>
-        <input id="threshold" name="threshold" type="number" min="1" step="1" value="8" required>
+        <div class="field">
+          <label for="threshold">eGFR Decline Threshold</label>
+          <div class="slider-row">
+            <input id="threshold" name="threshold" type="range" min="1" max="30" step="1" value="8">
+            <output id="threshold-value" for="threshold">8</output>
+          </div>
+        </div>
 
-        <label for="high-risk-toggle">Include High-Risk Plan</label>
-        <select id="high-risk-toggle" name="includeHighRisk">
-          <option value="true" selected>true</option>
-          <option value="false">false</option>
-        </select>
+        <div class="builder" aria-label="Ruleset builder">
+          <p class="builder-hint">
+            Drag modules between <strong>Available</strong> and <strong>Active Ruleset</strong> to
+            compose the version; drop onto a chip to insert before it. Your selection is used when you
+            Publish.
+          </p>
+          <iframe
+            id="flutter-dnd"
+            class="flutter-dnd"
+            title="Rule modules drag-and-drop"
+            src="./flutter/index.html"
+            data-testid="flutter-dnd"
+          ></iframe>
+        </div>
 
         <button type="submit">Publish</button>
       </form>
@@ -39,8 +57,10 @@
     <section class="card">
       <h2>Activate Version</h2>
       <form id="activate-form" class="inline-form">
-        <label for="activate-version">Version</label>
-        <input id="activate-version" name="activateVersion" type="text" placeholder="RULES-002" required>
+        <div class="field">
+          <label for="activate-version">Version</label>
+          <input id="activate-version" name="activateVersion" type="text" placeholder="RULES-002" required>
+        </div>
         <button type="submit">Activate</button>
       </form>
       <p id="activate-status" role="status" aria-live="polite">No activation requested.</p>
